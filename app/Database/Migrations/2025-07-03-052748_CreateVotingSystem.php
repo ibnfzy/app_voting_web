@@ -40,7 +40,11 @@ class CreateVotingSystem extends Migration
             ],
         ]);
         $this->forge->addKey('id_user', true);
-        $this->forge->createTable('users');
+        $this->forge->createTable('users', false, [
+            'ENGINE' => 'MyISAM',
+            'DEFAULT CHARSET' => 'utf8mb4',
+            'COLLATE' => 'utf8mb4_general_ci',
+        ]);
 
         // Pemilih details
         $this->forge->addField([
@@ -128,8 +132,12 @@ class CreateVotingSystem extends Migration
             ],
         ]);
         $this->forge->addKey('id_pemilih', true);
-        $this->forge->addForeignKey('user_id', 'users', 'id_user', 'CASCADE', 'CASCADE');
-        $this->forge->createTable('pemilih');
+        $this->forge->addKey('user_id');
+        $this->forge->createTable('pemilih', false, [
+            'ENGINE' => 'MyISAM',
+            'DEFAULT CHARSET' => 'utf8mb4',
+            'COLLATE' => 'utf8mb4_general_ci',
+        ]);
 
 
         // Candidates (Calon)
@@ -157,7 +165,11 @@ class CreateVotingSystem extends Migration
             ],
         ]);
         $this->forge->addKey('id_candidate', true);
-        $this->forge->createTable('candidates');
+        $this->forge->createTable('candidates', false, [
+            'ENGINE' => 'MyISAM',
+            'DEFAULT CHARSET' => 'utf8mb4',
+            'COLLATE' => 'utf8mb4_general_ci',
+        ]);
 
         // Schedule (Jadwal)
         $this->forge->addField([
@@ -180,7 +192,11 @@ class CreateVotingSystem extends Migration
             ],
         ]);
         $this->forge->addKey('id_schedule', true);
-        $this->forge->createTable('schedules');
+        $this->forge->createTable('schedules', false, [
+            'ENGINE' => 'MyISAM',
+            'DEFAULT CHARSET' => 'utf8mb4',
+            'COLLATE' => 'utf8mb4_general_ci',
+        ]);
 
         // Votes
         $this->forge->addField([
@@ -212,10 +228,14 @@ class CreateVotingSystem extends Migration
             ],
         ]);
         $this->forge->addKey('id_vote', true);
-        $this->forge->addForeignKey('pemilih_id', 'pemilih', 'id_pemilih', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('candidate_id', 'candidates', 'id_candidate', 'CASCADE', 'CASCADE');
-        $this->forge->addForeignKey('panitia_id', 'users', 'id_user', 'SET NULL', 'CASCADE');
-        $this->forge->createTable('votes');
+        $this->forge->addKey('pemilih_id');
+        $this->forge->addKey('candidate_id');
+        $this->forge->addKey('panitia_id');
+        $this->forge->createTable('votes', false, [
+            'ENGINE' => 'MyISAM',
+            'DEFAULT CHARSET' => 'utf8mb4',
+            'COLLATE' => 'utf8mb4_general_ci',
+        ]);
     }
 
     public function down()
