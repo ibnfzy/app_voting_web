@@ -191,6 +191,7 @@ class BPDPanel extends BaseController
         $totalPemilih = $this->db->table('pemilih')->countAllResults();
         $totalValidated = $this->db->table('pemilih')->where('validate', 1)->countAllResults();
         $totalNotValidated = $this->db->table('pemilih')->where('validate', 0)->countAllResults();
+        $totalInvalid = $this->db->table('pemilih')->where('validate', 2)->countAllResults();
 
         $pemilih = $this->db->table('pemilih')
             ->orderBy('name', 'ASC')
@@ -201,6 +202,7 @@ class BPDPanel extends BaseController
             'totalPemilih' => $totalPemilih,
             'totalValidated' => $totalValidated,
             'totalNotValidated' => $totalNotValidated,
+            'totalInvalid' => $totalInvalid,
             'pemilih' => $pemilih,
         ]);
     }

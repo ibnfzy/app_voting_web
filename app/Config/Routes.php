@@ -37,6 +37,7 @@ $routes->group('BPDPanel', function (RouteCollection $routes) {
 $routes->group('PanitiaPanel', function (RouteCollection $routes) {
   $routes->get('/', 'PanitiaPanel::index');
   $routes->get('Pemilih/Validate/(:num)', 'PanitiaPanel::ubah_akses_kode/$1');
+  $routes->get('Pemilih/TidakValid/(:num)', 'PanitiaPanel::pemilih_tidak_valid/$1');
   $routes->get('Pemilih/(:num)', 'PanitiaPanel::hapus_pemilih/$1');
   $routes->get('Calon', 'PanitiaPanel::calon');
   $routes->get('Calon/(:num)', 'PanitiaPanel::hapus_calon/$1');

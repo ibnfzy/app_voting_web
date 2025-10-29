@@ -108,6 +108,11 @@
     background: #dc3545;
   }
 
+  .status-invalid {
+    background: #ffc107;
+    color: #000;
+  }
+
   .footer {
     margin-top: 40px;
     text-align: right;
@@ -135,6 +140,10 @@
     <div class="card">
       <h3>Belum Validasi</h3>
       <p><?= $totalNotValidated ?></p>
+    </div>
+    <div class="card">
+      <h3>Data Tidak Valid</h3>
+      <p><?= $totalInvalid ?></p>
     </div>
   </div>
 
@@ -183,6 +192,8 @@
         <td style="text-align: center;">
           <?php if ((int) ($row['validate'] ?? 0) === 1): ?>
           <span class="status-badge status-valid">Sudah Validasi</span>
+          <?php elseif ((int) ($row['validate'] ?? 0) === 2): ?>
+          <span class="status-badge status-invalid">Data Tidak Valid</span>
           <?php else: ?>
           <span class="status-badge status-not-valid">Belum Validasi</span>
           <?php endif; ?>

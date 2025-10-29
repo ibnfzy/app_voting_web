@@ -32,11 +32,36 @@ class PanitiaPanel extends BaseController
 
     public function ubah_akses_kode($id)
     {
+        $pemilih = $this->db->table('pemilih')->where('id_pemilih', $id)->get()->getRowArray();
+
+        if (!$pemilih) {
+            return redirect()->to(base_url('PanitiaPanel/'))
+                ->with('type-status', 'error')
+                ->with('message', 'Data pemilih tidak ditemukan');
+        }
+
         $this->db->table('pemilih')->where('id_pemilih', $id)->update([
             'validate' => 1
         ]);
 
         return redirect()->to(base_url('PanitiaPanel/'))->with('type-status', 'success')->with('message', 'Berhasil memvalidasi Pemilih');
+    }
+
+    public function pemilih_tidak_valid($id)
+    {
+        $pemilih = $this->db->table('pemilih')->where('id_pemilih', $id)->get()->getRowArray();
+
+        if (!$pemilih) {
+            return redirect()->to(base_url('PanitiaPanel/'))
+                ->with('type-status', 'error')
+                ->with('message', 'Data pemilih tidak ditemukan');
+        }
+
+        $this->db->table('pemilih')->where('id_pemilih', $id)->update([
+            'validate' => 2
+        ]);
+
+        return redirect()->to(base_url('PanitiaPanel/'))->with('type-status', 'success')->with('message', 'Status pemilih diperbarui menjadi tidak valid');
     }
 
     public function calon()
