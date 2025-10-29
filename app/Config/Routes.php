@@ -62,4 +62,5 @@ $routes->group('API', function (RouteCollection $routes) {
   $routes->post('vote', 'API::vote');
   $routes->get('vote/schedule', 'API::getSchedule');
   $routes->get('vote/results', 'API::getResults');
+  $routes->get('vote/winner', 'API::getWinner');
 });

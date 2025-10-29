@@ -410,4 +410,42 @@ class API extends BaseController
             'data'   => $results
         ]);
     }
+
+    public function getWinner()
+    {
+        $results = $this->db->table('candidates c')
+            ->select('c.id_candidate AS candidate_id, c.name AS candidate_name, c.photo, c.visi, c.misi, COUNT(v.id_vote) AS vote_count')
+            ->join('votes v', 'v.candidate_id = c.id_candidate', 'left')
+            ->groupBy('c.id_candidate')
+            ->orderBy('vote_count', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        if (!$results) {
+            return $this->response->setJSON([
+                'status'  => 'success',
+                'message' => 'Belum ada kandidat yang terdaftar.',
+                'data'    => []
+            ]);
+        }
+
+        $highestVotes = (int) ($results[0]['vote_count'] ?? 0);
+
+        $winners = array_map(function ($candidate) {
+            $candidate['visi'] = $this->parseList($candidate['visi']);
+            $candidate['misi'] = $this->parseList($candidate['misi']);
+            $candidate['photo'] = $candidate['photo']
+                ? base_url('uploads/' . $candidate['photo'])
+                : null;
+
+            return $candidate;
+        }, array_filter($results, static function ($candidate) use ($highestVotes) {
+            return (int) $candidate['vote_count'] === $highestVotes;
+        }));
+
+        return $this->response->setJSON([
+            'status' => 'success',
+            'data'   => array_values($winners)
+        ]);
+    }
 }
