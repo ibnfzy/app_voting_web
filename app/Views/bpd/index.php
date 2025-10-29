@@ -15,7 +15,7 @@
         </a>
       </div>
       <div class="card-body table-responsive">
-        <table class="table table-bordered datatables">'
+        <table class="table table-bordered datatables">
           <thead>
             <th>~</th>
             <th>NIK</th>
@@ -48,9 +48,11 @@
               <td><?= $item['kabupaten']; ?></td>
               <td><?= $item['provinsi']; ?></td>
               <td><?= $item['registered_at']; ?></td>
-                <td>
-                <?php if ($item['validate'] == 1): ?>
+              <td>
+                <?php if ((int) $item['validate'] === 1): ?>
                 <span class="badge bg-success">Sudah Validasi</span>
+                <?php elseif ((int) $item['validate'] === 2): ?>
+                <span class="badge bg-warning text-dark">Data Tidak Valid</span>
                 <?php else: ?>
                 <span class="badge bg-danger">Belum Validasi</span>
                 <?php endif; ?>
