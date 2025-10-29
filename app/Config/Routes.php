@@ -6,6 +6,7 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
+$routes->options('(:any)', 'Home::options');
 
 $routes->group('Auth', function (RouteCollection $routes) {
   $routes->get('Panitia', 'Auth::panitia_login');
@@ -34,7 +35,8 @@ $routes->group('BPDPanel', function (RouteCollection $routes) {
 
 $routes->group('PanitiaPanel', function (RouteCollection $routes) {
   $routes->get('/', 'PanitiaPanel::index');
-  $routes->get('Pemilih', 'PanitiaPanel::ubah_akses_kode');
+  $routes->get('Pemilih/Validate/(:num)', 'PanitiaPanel::ubah_akses_kode/$1');
+  $routes->get('Pemilih/(:num)', 'PanitiaPanel::hapus_pemilih/$1');
   $routes->get('Calon', 'PanitiaPanel::calon');
   $routes->get('Calon/(:num)', 'PanitiaPanel::hapus_calon/$1');
   $routes->post('Calon', 'PanitiaPanel::tambah_calon');
@@ -43,6 +45,7 @@ $routes->group('PanitiaPanel', function (RouteCollection $routes) {
   $routes->get('getVotingData', 'PanitiaPanel::getVotingData');
   $routes->post('aturJadwal', 'PanitiaPanel::aturJadwal');
   $routes->get('ResetPemilhan', 'PanitiaPanel::reset_pemilihan');
+  $routes->get('Laporan', 'PanitiaPanel::laporan');
 });
 
 $routes->group('API', function (RouteCollection $routes) {

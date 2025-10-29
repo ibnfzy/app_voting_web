@@ -21,9 +21,18 @@ class PanitiaPanel extends BaseController
         ]);
     }
 
-    public function ubah_akses_kode()
+    public function hapus_pemilih($id)
     {
-        $this->db->table('pemilih')->where('id_pemilih', $this->request->getVar('id_pemilih'))->update([
+        $getPemilih = $this->db->table('pemilih')->where('id_pemilih', $id)->get()->getRowArray();
+        $this->db->table('pemilih')->where('id_pemilih', $id)->delete();
+        $this->db->table('users')->where('id_user', $getPemilih['user_id'])->delete();
+
+        return redirect()->to(base_url('PanitiaPanel/'))->with('type-status', 'success')->with('message', 'Berhasil mengubah data');
+    }
+
+    public function ubah_akses_kode($id)
+    {
+        $this->db->table('pemilih')->where('id_pemilih', $id)->update([
             'validate' => 1
         ]);
 
@@ -57,7 +66,7 @@ class PanitiaPanel extends BaseController
     {
         $file = $this->request->getFile('photo');
 
-        if (!is_null($file)) {
+        if ($file && $file->isValid() && !$file->hasMoved()) {
             $fileName = $file->getRandomName();
             $file->move('uploads', $fileName);
 
@@ -174,5 +183,27 @@ class PanitiaPanel extends BaseController
         ]);
 
         return redirect()->to('/PanitiaPanel/prosesPemilihan')->with('message', 'Jadwal pemilihan berhasil diatur.');
+    }
+
+    public function laporan()
+    {
+        $jadwal = $this->db->table('schedules')->orderBy('id_schedule', 'DESC')->get()->getRow();
+
+        $totalPemilih = $this->db->table('pemilih')->countAllResults();
+        $totalVotes = $this->db->table('votes')->countAllResults();
+
+        $hasil = $this->db->table('candidates c')
+            ->select('c.id_candidate, c.name, c.visi, c.misi, c.photo, COUNT(v.id_vote) as jumlah')
+            ->join('votes v', 'v.candidate_id = c.id_candidate', 'left')
+            ->groupBy('c.id_candidate')
+            ->get()
+            ->getResult();
+
+        return view('bpd/laporan_pemilihan', [
+            'jadwal' => $jadwal,
+            'totalPemilih' => $totalPemilih,
+            'totalVotes' => $totalVotes,
+            'hasil' => $hasil
+        ]);
     }
 }

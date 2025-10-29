@@ -34,6 +34,7 @@
       <div class="space-x-6 hidden md:block">
         <a href="#jadwal" class="hover:text-white/80 font-medium transition">Jadwal</a>
         <a href="#kandidat" class="hover:text-white/80 font-medium transition">Kandidat</a>
+        <a href="https://drive.google.com/file/d/1auPci5FE5IFscfA618SQD0gwlItjNehV/view?usp=sharing" class="hover:text-white/80 font-medium transition" target="_blank">Download APK Pemilihan</a>
         <a href="/BPDPanel" class="hover:text-white/80 font-medium transition">Login BPD</a>
         <a href="/PanitiaPanel" class="hover:text-white/80 font-medium transition">Login Panitia</a>
       </div>

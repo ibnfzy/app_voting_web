@@ -3,6 +3,7 @@
 namespace Config;
 
 use App\Filters\PanitiaPanel;
+use App\Filters\BPDPanel;
 use CodeIgniter\Config\Filters as BaseFilters;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
@@ -35,7 +36,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
-        'panitiapanel'  => PanitiaPanel::class
+        'panitiapanel'  => PanitiaPanel::class,
+        'bpdpanel' => BPDPanel::class
     ];
 
     /**
@@ -108,6 +110,13 @@ class Filters extends BaseFilters
     public array $filters = [
         'panitiapanel' => [
             'before' => ['PanitiaPanel', 'PanitiaPanel/*']
+        ],
+        'cors' => [
+            'before' => ['api', 'api/*', 'API', 'API/*', 'uploads', 'uploads/*'],
+            'after'  => ['api', 'api/*', 'API', 'API/*', 'uploads', 'uploads/*']
+        ],
+        'bpdpanel' => [
+            'before' => ['BPDPanel', 'BPDPanel/*']
         ]
     ];
 }

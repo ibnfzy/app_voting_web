@@ -120,16 +120,17 @@
 
   .misi {
     text-align: left;
+    padding-left: 7%;
   }
   </style>
 </head>
 
 <body>
   <div class="header">
-    <img src="https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png" alt="Logo">
+    <!-- <img src="https://www.adaptivewfs.com/wp-content/uploads/2020/07/logo-placeholder-image.png" alt="Logo"> -->
     <h2>PANITIA PEMILIHAN</h2>
-    <h3>LAPORAN HASIL PEMILIHAN</h3>
-    <p>Kecamatan Balantak Utara, Kabupaten Banggai, Sulawesi Barat</p>
+    <h3>LAPORAN HASIL PEMILIHAN KEPALA DESA</h3>
+    <p>Kecamatan Balantak Utara, Kabupaten Banggai, Sulawesi Tengah</p>
   </div>
   <div class="line"></div>
 

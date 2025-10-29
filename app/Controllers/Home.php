@@ -50,4 +50,13 @@ class Home extends BaseController
             'jadwalStatus'  => $jadwalStatus
         ]);
     }
+
+    public function options()
+    {
+        return $this->response
+        ->setStatusCode(200)
+        ->setHeader('Access-Control-Allow-Origin', '*')
+        ->setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+        ->setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    }
 }

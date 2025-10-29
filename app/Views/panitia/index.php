@@ -53,11 +53,11 @@
               <td>
                 <div class="btn-group-vertical">
                   <?php if ($item['validate'] == 0) : ?>
-                  <a class="btn btn-primary" href="/PanitiaPanel/Pemilih">
+                  <a class="btn btn-primary" href="/PanitiaPanel/Pemilih/Validate/<?= $item['id_pemilih'] ?>">
                     Validasi Pemilih
                   </a>
                   <?php endif ?>
-                  <a href="/PanitiaPanel/Pemiilih/<?= $item['id_pemilih'] ?>" class="btn btn-danger">Hapus</a>
+                  <a href="/PanitiaPanel/Pemilih/<?= $item['id_pemilih'] ?>" class="btn btn-danger">Hapus</a>
                 </div>
               </td>
             </tr>
@@ -70,5 +70,3 @@
 </div>
 
 <?= $this->endSection(); ?>
-
-<?= $this->section('script'); ?>

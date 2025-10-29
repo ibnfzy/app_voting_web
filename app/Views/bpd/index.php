@@ -26,8 +26,7 @@
             <th>Kabupaten</th>
             <th>Provinsi</th>
             <th>Tanggal, Waktu Registrasi</th>
-            <th>Status Akses Kode</th>
-            <th>Aksi</th>
+            <th>Status Validasi</th>
           </thead>
           <tbody>
             <?php foreach ($data as $key => $item) : ?>
@@ -45,12 +44,12 @@
               <td><?= $item['kabupaten']; ?></td>
               <td><?= $item['provinsi']; ?></td>
               <td><?= $item['registered_at']; ?></td>
-              <td><?= $item['access_code'] ?? 'Belum Ada'; ?></td>
-              <td>
-                <button class="btn btn-primary">
-                  Edit
-                </button>
-                <a href="#" class="btn btn-danger">Hapus</a>
+                <td>
+                <?php if ($item['validate'] == 1): ?>
+                <span class="badge bg-success">Sudah Validasi</span>
+                <?php else: ?>
+                <span class="badge bg-danger">Belum Validasi</span>
+                <?php endif; ?>
               </td>
             </tr>
             <?php endforeach ?>

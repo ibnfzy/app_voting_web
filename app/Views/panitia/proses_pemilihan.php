@@ -6,30 +6,45 @@
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="mb-0">Proses Pemilihan Kepala Desa</h5>
       <div class="d-flex gap-2">
-        <button class="btn btn-primary <?= $pemilihanAktif ? 'disabled' : '' ?>" data-bs-toggle="modal"
-          data-bs-target="#aturJadwalModal">
-          Atur Jadwal Pemilihan
-        </button>
+        <?php if (isset($jadwal) && strtotime($jadwal->end_time) < time()) : ?>
+          <a class="btn btn-primary" href="/PanitiaPanel/Laporan" target="_blank">
+            Lihat Laporan Pemilihan
+          </a>
+          <button class="btn btn-secondary disabled">
+            Pemilihan Telah Berakhir
+          </button>
+        <?php else: ?>
+          <button class="btn btn-primary <?= $pemilihanAktif ? 'disabled' : '' ?>" 
+                  data-bs-toggle="modal"
+                  data-bs-target="#aturJadwalModal">
+            Atur Jadwal Pemilihan
+          </button>
+        <?php endif; ?>
         <a href="/PanitiaPanel/ResetPemilhan" class="btn btn-danger">
           Reset Pemilihan
         </a>
       </div>
     </div>
     <div class="card-body">
-      <?php if (!$pemilihanAktif && isset($countdownTarget)) : ?>
-      <div class="alert alert-info">
-        Pemilihan akan dimulai dalam <span id="countdown"></span>
-      </div>
+      <?php if (!$pemilihanAktif && isset($countdownTarget) && strtotime($countdownTarget) > time()) : ?>
+          <div class="alert alert-info">
+            Pemilihan akan dimulai dalam <span id="countdown"></span>
+          </div>
       <?php elseif ($pemilihanAktif) : ?>
-      <div class="alert alert-success">
-        <strong>Pemilihan sedang berlangsung.</strong><br>
-        Jadwal:
-        <span class="fw-bold"><?= date('d M Y H:i', strtotime($jadwal->start_time)) ?></span>
-        s/d
-        <span class="fw-bold"><?= date('d M Y H:i', strtotime($jadwal->end_time)) ?></span>
-      </div>
+          <div class="alert alert-success">
+            <strong>Pemilihan sedang berlangsung.</strong><br>
+            Jadwal:
+            <span class="fw-bold"><?= date('d M Y H:i', strtotime($jadwal->start_time)) ?></span>
+            s/d
+            <span class="fw-bold"><?= date('d M Y H:i', strtotime($jadwal->end_time)) ?></span>
+          </div>
+      <?php elseif (isset($jadwal) && strtotime($jadwal->end_time) < time()) : ?>
+          <div class="alert alert-danger">
+            <strong>Pemilihan sudah berakhir.</strong><br>
+            Terima kasih atas partisipasi Anda.
+          </div>
       <?php else: ?>
-      <div class="alert alert-warning">Jadwal pemilihan belum diatur.</div>
+          <div class="alert alert-warning">Jadwal pemilihan belum diatur.</div>
       <?php endif; ?>
 
       <?php if ($pemilihanAktif): ?>

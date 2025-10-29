@@ -126,7 +126,7 @@ class API extends BaseController
             $userId = $this->request->getVar('user_id');
 
             $checkEmail = $this->db->table('pemilih')->where('email', $email)->get()->getRowArray();
-            $checkNik = $this->db->table('users')->where('nik', $nik)->get()->getRowArray();
+            $checkNik = $this->db->table('pemilih')->where('nik', $nik)->get()->getRowArray();
 
             if ($checkEmail) {
                 return $this->response->setStatusCode(400)->setJSON([
@@ -171,12 +171,37 @@ class API extends BaseController
                 'user' => $getUser
             ]);
         } catch (\Throwable $e) {
+            log_message('error', $e->getMessage());
             return $this->response->setStatusCode(400)->setJSON([
                 'status' => 'error',
                 'message' => 'Internal server error',
                 'code' => 400
             ]);
         }
+    }
+
+    public function parseList($value)
+    {
+        if (is_array($value)) {
+            // kalau sudah array, langsung kembalikan
+            return $value;
+        }
+
+        if (is_string($value)) {
+            // cari isi <li>... </li>
+            preg_match_all('/<li>(.*?)<\/li>/i', $value, $matches);
+
+            if (!empty($matches[1])) {
+                // jika ada <li>, ambil isinya
+                return array_map('trim', $matches[1]);
+            } else {
+                // kalau tidak ada <li>, tetap jadikan array
+                return [$value];
+            }
+        }
+
+        // fallback
+        return [];
     }
 
     public function candidates()
@@ -186,12 +211,15 @@ class API extends BaseController
         $data = [];
 
         foreach ($get as $item) {
+            $misi = $this->parseList($item['misi']);
+            $visi = $this->parseList($item['visi']);
+
             $data[] = [
                 'id_candidate' => $item['id_candidate'],
                 'name' => $item['name'],
                 'photo' => base_url('uploads/' . $item['photo']),
-                'visi' => $item['visi'],
-                'misi' => $item['misi']
+                'visi' => $visi,
+                'misi' => $misi
             ];
         }
 
@@ -205,12 +233,15 @@ class API extends BaseController
     {
         $get = $this->db->table('candidates')->where('id_candidate', $id)->get()->getRowArray();
 
+        $misi = $this->parseList($get['misi']);
+        $visi = $this->parseList($get['visi']);
+
         $data = [
             'id_candidate' => $get['id_candidate'],
             'name' => $get['name'],
             'photo' => base_url('uploads/' . $get['photo']),
-            'visi' => $get['visi'],
-            'misi' => $get['misi']
+            'visi' => $visi,
+            'misi' => $misi
         ];
 
         return $this->response->setJSON([
