@@ -30,6 +30,7 @@ $routes->group('BPDPanel', function (RouteCollection $routes) {
   $routes->post('aturJadwal', 'BPDPanel::aturJadwal');
   $routes->get('ResetPemilhan', 'BPDPanel::reset_pemilihan');
   $routes->get('Laporan', 'BPDPanel::laporan');
+  $routes->get('Laporan/Pemilih', 'BPDPanel::laporanPemilih');
 });
 
 
