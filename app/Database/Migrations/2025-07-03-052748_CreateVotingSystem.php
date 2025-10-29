@@ -1,6 +1,7 @@
 <?php
 
 use CodeIgniter\Database\Migration;
+use CodeIgniter\Database\RawSql;
 
 class CreateVotingSystem extends Migration
 {
@@ -123,7 +124,7 @@ class CreateVotingSystem extends Migration
             ],
             'registered_at'  => [
                 'type'    => 'DATETIME',
-                'default' => 'CURRENT_TIMESTAMP',
+                'default' => new RawSql('(CURRENT_TIMESTAMP)'),
             ],
         ]);
         $this->forge->addKey('id_pemilih', true);
