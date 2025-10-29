@@ -54,11 +54,6 @@ class CreateVotingSystem extends Migration
                 'unsigned'       => true,
                 'auto_increment' => true,
             ],
-            'user_id'        => [
-                'type'           => 'INT',
-                'constraint'     => 11,
-                'unsigned'       => true,
-            ],
             'nik'            => [
                 'type'       => 'VARCHAR',
                 'constraint' => '20',
@@ -132,7 +127,6 @@ class CreateVotingSystem extends Migration
             ],
         ]);
         $this->forge->addKey('id_pemilih', true);
-        $this->forge->addKey('user_id');
         $this->forge->createTable('pemilih', false, [
             'ENGINE' => 'MyISAM',
             'DEFAULT CHARSET' => 'utf8mb4',

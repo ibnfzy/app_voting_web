@@ -28,50 +28,37 @@ class API extends BaseController
     public function login()
     {
         $json = $this->request->getJSON(true);
-        $username = $json['username'] ?? '';
+        $nik = $json['nik'] ?? '';
 
-        if (!$username) {
-            return $this->apiError('Username harus diisi.', 400);
+        if (!$nik) {
+            return $this->apiError('NIK harus diisi.', 400);
         }
 
-        $user = $this->db->table('users')
-            ->where('username', $username)
-            ->where('role', 'pemilih')
-            ->get()
-            ->getRowArray();
-
-        if (!$user) {
-            return $this->apiError('user not found', 404);
-        }
-
-        // Ambil data pemilih berdasarkan user_id
         $pemilih = $this->db->table('pemilih')
-            ->where('user_id', $user['id_user'])
+            ->where('nik', $nik)
             ->get()
             ->getRowArray();
-
-        if ($pemilih['validate'] == 0) {
-            return $this->apiError('invalid account', 400);
-        }
 
         if (!$pemilih) {
             return $this->apiError('Data pemilih tidak ditemukan.', 404);
         }
 
+        if ((int) ($pemilih['validate'] ?? 0) !== 1) {
+            return $this->apiError('invalid account', 400);
+        }
+
         // Tambahkan info voting
-        $pemilih['hasVoted'] = !empty($pemilih['voted_for']);
+        $hasVoted = !empty($pemilih['voted_for'] ?? null);
+        $pemilih['hasVoted'] = $hasVoted;
         $pemilih['votedFor'] = $pemilih['voted_for'] ?? null;
         unset($pemilih['voted_for']);
 
         return $this->response->setJSON([
             'status' => 'success',
             'user' => [
-                'id_user'     => (int) $user['id_user'],
-                'username'    => $user['username'],
-                'role'        => $user['role'],
-                'created_at'  => date(DATE_ATOM, strtotime($user['created_at'])),
-                'updated_at'  => date(DATE_ATOM, strtotime($user['updated_at'])),
-                'pemilih'     => $pemilih
+                'nik'        => $pemilih['nik'],
+                'role'       => 'pemilih',
+                'pemilih'    => $pemilih
             ]
         ]);
     }
@@ -123,8 +110,6 @@ class API extends BaseController
         try {
             $email = $this->request->getVar('email');
             $nik = $this->request->getVar('nik');
-            $userId = $this->request->getVar('user_id');
-
             $checkEmail = $this->db->table('pemilih')->where('email', $email)->get()->getRowArray();
             $checkNik = $this->db->table('pemilih')->where('nik', $nik)->get()->getRowArray();
 
@@ -155,7 +140,6 @@ class API extends BaseController
             }
 
             $this->db->table('pemilih')->insert([
-                'user_id'       => $userId,
                 'nik'           => $nik,
                 'name'          => $this->request->getVar('name'),
                 'tempat_lahir'  => $this->request->getVar('tempat_lahir'),
@@ -172,14 +156,15 @@ class API extends BaseController
                 'nama_file_ktp' => $namaFileKtp,
             ]);
 
-            $getUser = $this->db->table('users')->where('id_user', $userId)->get()->getRowArray();
-            $getPemilih = $this->db->table('pemilih')->where('user_id', $userId)->get()->getRowArray();
-
-            $getUser['pemilih'] = $getPemilih;
+            $pemilihId = $this->db->insertID();
+            $getPemilih = $this->db->table('pemilih')->where('id_pemilih', $pemilihId)->get()->getRowArray();
+            $getPemilih['hasVoted'] = !empty($getPemilih['voted_for'] ?? null);
+            $getPemilih['votedFor'] = $getPemilih['voted_for'] ?? null;
+            unset($getPemilih['voted_for']);
 
             return $this->response->setJSON([
                 'status' => 'registration successful',
-                'user' => $getUser
+                'pemilih' => $getPemilih
             ]);
         } catch (\Throwable $e) {
             log_message('error', $e->getMessage());
