@@ -116,14 +116,14 @@ class CreateVotingSystem extends Migration
                 'constraint' => '150',
                 'unique'     => true,
             ],
-            'access_code'    => [
-                'type'       => 'VARCHAR',
-                'constraint' => '50',
-                'null'       => true,
+            'validate'       => [
+                'type'       => 'TINYINT',
+                'constraint' => 1,
+                'default'    => 0,
             ],
             'registered_at'  => [
-                'type' => 'DATETIME',
-                'null' => true,
+                'type'    => 'DATETIME',
+                'default' => 'CURRENT_TIMESTAMP',
             ],
         ]);
         $this->forge->addKey('id_pemilih', true);
