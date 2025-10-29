@@ -23,9 +23,7 @@ class PanitiaPanel extends BaseController
 
     public function hapus_pemilih($id)
     {
-        $getPemilih = $this->db->table('pemilih')->where('id_pemilih', $id)->get()->getRowArray();
         $this->db->table('pemilih')->where('id_pemilih', $id)->delete();
-        $this->db->table('users')->where('id_user', $getPemilih['user_id'])->delete();
 
         return redirect()->to(base_url('PanitiaPanel/'))->with('type-status', 'success')->with('message', 'Berhasil mengubah data');
     }

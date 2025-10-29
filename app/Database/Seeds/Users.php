@@ -24,24 +24,8 @@ class Users extends Seeder
         $faker = \Faker\Factory::create('id_ID');
 
         for ($i = 1; $i <= 15; $i++) {
-            // Insert user terlebih dahulu
-            $username = 'pemilih' . $i;
-            $password = password_hash('password', PASSWORD_DEFAULT);
-
-            $userData = [
-                'username'   => $username,
-                'password'   => $password,
-                'role'       => 'pemilih',
-                'created_at' => date('Y-m-d H:i:s'),
-            ];
-
-            $this->db->table('users')->insert($userData);
-            $userId = $this->db->insertID();
-
-            // Insert data ke pemilih
             $pemilihData = [
-                'user_id'       => $userId,
-                'nik'           => $faker->nik(),
+                'nik'           => $faker->unique()->nik(),
                 'name'          => $faker->name(),
                 'tempat_lahir'  => $faker->city,
                 'tanggal_lahir' => $faker->date(),
@@ -54,7 +38,6 @@ class Users extends Seeder
                 'kabupaten'     => $faker->city,
                 'provinsi'      => $faker->state,
                 'email'         => 'pemilih' . $i . '@example.com',
-                'access_code'   => strtoupper($faker->bothify('AC###??')),
                 'registered_at' => date('Y-m-d H:i:s'),
             ];
 
