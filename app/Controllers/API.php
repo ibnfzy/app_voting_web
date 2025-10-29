@@ -144,6 +144,20 @@ class API extends BaseController
                 ]);
             }
 
+            $fileKtp = $this->request->getFile('file_ktp');
+            $namaFileKtp = null;
+
+            if ($fileKtp && $fileKtp->isValid() && !$fileKtp->hasMoved()) {
+                $uploadPath = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads';
+
+                if (!is_dir($uploadPath)) {
+                    mkdir($uploadPath, 0755, true);
+                }
+
+                $namaFileKtp = $fileKtp->getRandomName();
+                $fileKtp->move($uploadPath, $namaFileKtp);
+            }
+
             $this->db->table('pemilih')->insert([
                 'user_id'       => $userId,
                 'nik'           => $nik,
@@ -158,7 +172,8 @@ class API extends BaseController
                 'kecamatan'     => $this->request->getVar('kecamatan'),
                 'kabupaten'     => $this->request->getVar('kabupaten'),
                 'provinsi'      => $this->request->getVar('provinsi'),
-                'email'         => $email
+                'email'         => $email,
+                'nama_file_ktp' => $namaFileKtp,
             ]);
 
             $getUser = $this->db->table('users')->where('id_user', $userId)->get()->getRowArray();
