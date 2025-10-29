@@ -27,7 +27,7 @@ class CreateVotingSystem extends Migration
             ],
             'role'        => [
                 'type'       => 'ENUM',
-                'constraint' => ['panitia', 'bpd', 'pemilih'],
+                'constraint' => ['panitia', 'bpd'],
                 'default'    => 'pemilih',
             ],
             'created_at'  => [
