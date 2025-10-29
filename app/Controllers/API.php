@@ -148,11 +148,7 @@ class API extends BaseController
             $namaFileKtp = null;
 
             if ($fileKtp && $fileKtp->isValid() && !$fileKtp->hasMoved()) {
-                $uploadPath = rtrim(FCPATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'uploads';
-
-                if (!is_dir($uploadPath)) {
-                    mkdir($uploadPath, 0755, true);
-                }
+                $uploadPath = 'uploads';
 
                 $namaFileKtp = $fileKtp->getRandomName();
                 $fileKtp->move($uploadPath, $namaFileKtp);

@@ -8,10 +8,9 @@ class AddNamaFileKtpToPemilih extends Migration
     {
         $fields = [
             'nama_file_ktp' => [
-                'type'       => 'VARCHAR',
-                'constraint' => '255',
-                'null'       => true,
-                'after'      => 'email',
+                'type'  => 'TEXT',
+                'null'  => true,
+                'after' => 'email',
             ],
         ];
 
