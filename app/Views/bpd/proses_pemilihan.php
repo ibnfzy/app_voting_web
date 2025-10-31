@@ -408,7 +408,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sanitize-html@2.11.3/dist/sanitize-html.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   let chartInstance;
@@ -440,6 +440,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const uploadsBaseUrl = "<?= base_url('uploads') ?>";
   const defaultPhotoUrl = "<?= base_url('uploads/default.png') ?>";
   const candidateCardsContainer = document.getElementById('candidateCards');
+
+  if (!window.DOMPurify) {
+    console.error('DOMPurify gagal dimuat. Ringkasan kandidat akan dirender tanpa sanitasi HTML.');
+  }
 
   const escapeHtml = (text) => {
     return (text || '').replace(/[&<>"']/g, (ch) => ({
@@ -512,9 +516,15 @@ document.addEventListener('DOMContentLoaded', function() {
       return '';
     }
 
-    const sanitized = sanitizeHtml(html, {
-      allowedTags: allowedSummaryTags,
-      allowedAttributes: {}
+    if (!window.DOMPurify) {
+      const fallback = document.createElement('div');
+      fallback.textContent = html;
+      return fallback.innerHTML;
+    }
+
+    const sanitized = window.DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: allowedSummaryTags,
+      ALLOWED_ATTR: []
     });
 
     const wrapper = document.createElement('div');
