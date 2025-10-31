@@ -145,10 +145,10 @@ class PanitiaPanel extends BaseController
         }
 
         // Data Chart: jumlah suara per calon
-        $chartData = $this->db->table('votes')
-            ->select('candidates.name AS nama_calon, COUNT(votes.id_vote) AS jumlah')
-            ->join('candidates', 'candidates.id_candidate = votes.candidate_id', 'left')
-            ->groupBy('votes.candidate_id')
+        $chartData = $this->db->table('candidates')
+            ->select('candidates.id_candidate, candidates.name, candidates.photo, candidates.visi, candidates.misi, COUNT(votes.id_vote) AS jumlah')
+            ->join('votes', 'votes.candidate_id = candidates.id_candidate', 'left')
+            ->groupBy('candidates.id_candidate')
             ->get()->getResultArray();
 
         // Data Voting Table: daftar pemilih yang sudah voting
@@ -172,10 +172,10 @@ class PanitiaPanel extends BaseController
     public function getVotingData()
     {
         // Data Chart: jumlah suara per calon
-        $chartData = $this->db->table('votes')
-            ->select('candidates.name AS nama_calon, COUNT(votes.id_vote) AS jumlah')
-            ->join('candidates', 'candidates.id_candidate = votes.candidate_id', 'left')
-            ->groupBy('votes.candidate_id')
+        $chartData = $this->db->table('candidates')
+            ->select('candidates.id_candidate, candidates.name, candidates.photo, candidates.visi, candidates.misi, COUNT(votes.id_vote) AS jumlah')
+            ->join('votes', 'votes.candidate_id = candidates.id_candidate', 'left')
+            ->groupBy('candidates.id_candidate')
             ->get()->getResultArray();
 
         // Data Voting Table: daftar pemilih yang sudah voting
