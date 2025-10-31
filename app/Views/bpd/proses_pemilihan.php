@@ -82,16 +82,133 @@
       $jumlahTopKandidat = ($valid = array_filter($topCandidates, static fn($id) => $id !== null)) ? count($valid) : count($topCandidates);
 
       $ringkasTeks = static function (?string $visi, ?string $misi): string {
-          $visiBersih = trim(strip_tags($visi ?? ''));
-          $misiBersih = trim(strip_tags($misi ?? ''));
-          $gabungan = trim($visiBersih . ($visiBersih && $misiBersih ? ' | ' : '') . $misiBersih);
-          if ($gabungan === '') {
-              return 'Visi dan misi belum tersedia.';
+          $allowedTags = ['p', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'br', 'span', 'div'];
+
+          $previousErrorLevel = libxml_use_internal_errors(true);
+
+          $sanitizeFragment = static function (?string $html) use ($allowedTags): string {
+              if ($html === null || trim($html) === '') {
+                  return '';
+              }
+
+              $fragmentDom = new DOMDocument();
+              $fragmentDom->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+              $fragmentXpath = new DOMXPath($fragmentDom);
+
+              foreach ($fragmentXpath->query('//comment()') as $commentNode) {
+                  if ($commentNode->parentNode) {
+                      $commentNode->parentNode->removeChild($commentNode);
+                  }
+              }
+
+              foreach ($fragmentXpath->query('//*') as $node) {
+                  if (!in_array($node->nodeName, $allowedTags, true)) {
+                      $replacement = $fragmentDom->createDocumentFragment();
+                      while ($node->childNodes->length > 0) {
+                          $replacement->appendChild($node->childNodes->item(0));
+                      }
+                      if ($node->parentNode) {
+                          $node->parentNode->replaceChild($replacement, $node);
+                      }
+                      continue;
+                  }
+
+                  while ($node->attributes->length > 0) {
+                      $node->removeAttribute($node->attributes->item(0)->nodeName);
+                  }
+              }
+
+              $textPreview = trim(preg_replace('/\s+/u', ' ', $fragmentDom->textContent ?? ''));
+              if ($textPreview === '') {
+                  libxml_clear_errors();
+                  return '';
+              }
+
+              $result = trim($fragmentDom->saveHTML());
+              libxml_clear_errors();
+
+              return $result;
+          };
+
+          $truncateNode = static function (DOMNode $node, int $limit, int &$lengthCount) use (&$truncateNode): void {
+              if (!$node->hasChildNodes()) {
+                  return;
+              }
+
+              $children = [];
+              foreach ($node->childNodes as $child) {
+                  $children[] = $child;
+              }
+
+              foreach ($children as $child) {
+                  if ($lengthCount >= $limit) {
+                      $node->removeChild($child);
+                      continue;
+                  }
+
+                  if ($child->nodeType === XML_TEXT_NODE) {
+                      $text = $child->nodeValue ?? '';
+                      if ($text === '') {
+                          continue;
+                      }
+
+                      $textLength = mb_strlen($text);
+                      $remaining = $limit - $lengthCount;
+
+                      if ($textLength <= $remaining) {
+                          $lengthCount += $textLength;
+                          continue;
+                      }
+
+                      $child->nodeValue = rtrim(mb_substr($text, 0, $remaining)) . '...';
+                      $lengthCount = $limit;
+
+                      while ($child->nextSibling) {
+                          $child->parentNode->removeChild($child->nextSibling);
+                      }
+
+                      continue;
+                  }
+
+                  if ($child->nodeType === XML_ELEMENT_NODE) {
+                      $truncateNode($child, $limit, $lengthCount);
+
+                      if ($lengthCount >= $limit) {
+                          while ($child->nextSibling) {
+                              $child->parentNode->removeChild($child->nextSibling);
+                          }
+                      }
+                  } else {
+                      $node->removeChild($child);
+                  }
+              }
+          };
+
+          $visiClean = $sanitizeFragment($visi);
+          $misiClean = $sanitizeFragment($misi);
+
+          $segments = array_filter([$visiClean, $misiClean], static fn($segment) => $segment !== '');
+          if (empty($segments)) {
+              libxml_clear_errors();
+              libxml_use_internal_errors($previousErrorLevel);
+              return '';
           }
-          if (mb_strlen($gabungan) > 160) {
-              return rtrim(mb_substr($gabungan, 0, 157)) . '...';
-          }
-          return $gabungan;
+
+          $combinedHtml = implode('<br />', $segments);
+
+          $dom = new DOMDocument();
+          $dom->loadHTML('<?xml encoding="utf-8" ?>' . $combinedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+          $lengthCount = 0;
+          $truncateNode($dom, 160, $lengthCount);
+
+          $result = trim($dom->saveHTML());
+
+          libxml_clear_errors();
+          libxml_use_internal_errors($previousErrorLevel);
+
+          return $result;
       };
       ?>
 
@@ -187,7 +304,12 @@
                       <h5 class="card-title mb-0"><?= esc($namaCalon) ?></h5>
                       <span class="badge bg-primary-subtle text-primary-emphasis">No. <?= esc($nomorUrut) ?></span>
                     </div>
-                    <p class="text-muted small flex-grow-1"><?= esc($ringkasan) ?></p>
+                    <?php
+                      if ($ringkasan === '') {
+                          $ringkasan = '<p>Visi dan misi belum tersedia.</p>';
+                      }
+                    ?>
+                    <div class="text-muted small flex-grow-1 summary-content"><?= $ringkasan ?></div>
                     <div class="mt-3">
                       <div class="d-flex justify-content-between small mb-1">
                         <span class="fw-semibold"><?= esc(number_format($jumlahSuara)) ?> suara</span>
@@ -279,6 +401,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"
+  integrity="sha256-9F9CAu7FTqWCwGxyPH+lJaSm+puSw0t5Yr2e9+xcs1E=" crossorigin="anonymous"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   let chartInstance;
@@ -311,12 +435,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const defaultPhotoUrl = "<?= base_url('uploads/default.png') ?>";
   const candidateCardsContainer = document.getElementById('candidateCards');
 
-  const stripHtml = (html) => {
-    const temp = document.createElement('div');
-    temp.innerHTML = html || '';
-    return (temp.textContent || temp.innerText || '').trim();
-  };
-
   const escapeHtml = (text) => {
     return (text || '').replace(/[&<>"']/g, (ch) => ({
       '&': '&amp;',
@@ -325,6 +443,110 @@ document.addEventListener('DOMContentLoaded', function() {
       '"': '&quot;',
       "'": '&#039;'
     }[ch] || ch));
+  };
+
+  const allowedSummaryTags = ['p', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'br', 'span', 'div'];
+
+  const truncateNode = (node, limit, state) => {
+    const children = Array.from(node.childNodes);
+
+    for (const child of children) {
+      if (state.count >= limit) {
+        node.removeChild(child);
+        continue;
+      }
+
+      if (child.nodeType === Node.TEXT_NODE) {
+        const text = child.nodeValue || '';
+        if (!text) {
+          continue;
+        }
+
+        const textLength = text.length;
+        const remaining = limit - state.count;
+
+        if (textLength <= remaining) {
+          state.count += textLength;
+          continue;
+        }
+
+        const truncated = text.slice(0, remaining).replace(/\s+$/u, '');
+        child.nodeValue = `${truncated}...`;
+        state.count = limit;
+
+        let sibling = child.nextSibling;
+        while (sibling) {
+          const next = sibling.nextSibling;
+          sibling.parentNode.removeChild(sibling);
+          sibling = next;
+        }
+
+        continue;
+      }
+
+      if (child.nodeType === Node.ELEMENT_NODE) {
+        truncateNode(child, limit, state);
+
+        if (state.count >= limit) {
+          let sibling = child.nextSibling;
+          while (sibling) {
+            const next = sibling.nextSibling;
+            sibling.parentNode.removeChild(sibling);
+            sibling = next;
+          }
+        }
+      } else {
+        node.removeChild(child);
+      }
+    }
+  };
+
+  const sanitizeSummaryPart = (html) => {
+    if (!html) {
+      return '';
+    }
+
+    const sanitized = DOMPurify.sanitize(html, {
+      ALLOWED_TAGS: allowedSummaryTags,
+      ALLOWED_ATTR: []
+    });
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = sanitized;
+
+    if (!wrapper.textContent.trim()) {
+      return '';
+    }
+
+    return wrapper.innerHTML;
+  };
+
+  const buildSummaryHtml = (visi, misi, maxLength = 160) => {
+    const parts = [];
+    const visiPart = sanitizeSummaryPart(visi);
+    if (visiPart) {
+      parts.push(visiPart);
+    }
+    const misiPart = sanitizeSummaryPart(misi);
+    if (misiPart) {
+      parts.push(misiPart);
+    }
+
+    if (!parts.length) {
+      return '';
+    }
+
+    const container = document.createElement('div');
+    container.innerHTML = parts.join('<br />');
+
+    const state = { count: 0 };
+    truncateNode(container, maxLength, state);
+
+    if (!container.textContent.trim()) {
+      return '';
+    }
+
+    return container.innerHTML;
   };
 
   const renderCandidateCards = (data) => {
@@ -352,17 +574,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const validTopCandidates = topCandidates.filter((id) => id !== null);
     const topCandidateCount = validTopCandidates.length > 0 ? validTopCandidates.length : topCandidates.length;
 
-    candidateCardsContainer.innerHTML = data.map((candidate, index) => {
+    candidateCardsContainer.innerHTML = '';
+
+    data.forEach((candidate, index) => {
       const votes = parseInt(candidate.jumlah ?? 0, 10);
       const percentage = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
       const percentageDisplay = percentage.toFixed(1);
       const name = (candidate.name && candidate.name.trim()) ? candidate.name : `Calon #${index + 1}`;
       const orderNumber = candidate.nomor_urut ?? (index + 1);
-      const summarySource = `${stripHtml(candidate.visi)}${candidate.visi && candidate.misi ? ' | ' : ''}${stripHtml(candidate.misi)}`.trim();
-      let summary = summarySource || 'Visi dan misi belum tersedia.';
-      if (summary.length > 160) {
-        summary = `${summary.substring(0, 157).trim()}...`;
-      }
+      const sanitizedSummary = buildSummaryHtml(candidate.visi, candidate.misi);
 
       let photo = candidate.photo ? `${uploadsBaseUrl}/${candidate.photo}` : defaultPhotoUrl;
       if (!candidate.photo) {
@@ -414,34 +634,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
       const badgeHtml = statusBadge ? `<span class="badge ${badgeClass} status-badge">${escapeHtml(statusBadge)}</span>` : '';
 
-      return `
-        <div class="col">
-          <div class="${cardClassNames.join(' ')}" data-candidate-id="${escapeHtml(String(candidate.id_candidate ?? ''))}">
-            <div class="position-relative">
-              <img src="${escapeHtml(photo)}" class="card-img-top candidate-photo" alt="Foto ${escapeHtml(name)}">
-              ${badgeHtml}
+      const col = document.createElement('div');
+      col.className = 'col';
+      col.innerHTML = `
+        <div class="${cardClassNames.join(' ')}" data-candidate-id="${escapeHtml(String(candidate.id_candidate ?? ''))}">
+          <div class="position-relative">
+            <img src="${escapeHtml(photo)}" class="card-img-top candidate-photo" alt="Foto ${escapeHtml(name)}">
+            ${badgeHtml}
+          </div>
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h5 class="card-title mb-0">${escapeHtml(name)}</h5>
+              <span class="badge bg-primary-subtle text-primary-emphasis">No. ${escapeHtml(String(orderNumber))}</span>
             </div>
-            <div class="card-body d-flex flex-column">
-              <div class="d-flex justify-content-between align-items-center mb-2">
-                <h5 class="card-title mb-0">${escapeHtml(name)}</h5>
-                <span class="badge bg-primary-subtle text-primary-emphasis">No. ${escapeHtml(String(orderNumber))}</span>
+            <div class="text-muted small flex-grow-1 summary-content"></div>
+            <div class="mt-3">
+              <div class="d-flex justify-content-between small mb-1">
+                <span class="fw-semibold">${escapeHtml(votes.toLocaleString('id-ID'))} suara</span>
+                <span class="text-muted">${escapeHtml(percentageDisplay)}%</span>
               </div>
-              <p class="text-muted small flex-grow-1">${escapeHtml(summary)}</p>
-              <div class="mt-3">
-                <div class="d-flex justify-content-between small mb-1">
-                  <span class="fw-semibold">${escapeHtml(votes.toLocaleString('id-ID'))} suara</span>
-                  <span class="text-muted">${escapeHtml(percentageDisplay)}%</span>
-                </div>
-                <div class="progress">
-                  <div class="progress-bar ${progressClass}" role="progressbar"
-                    style="width: ${percentage.toFixed(2)}%" aria-valuenow="${percentageDisplay}"
-                    aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
+              <div class="progress">
+                <div class="progress-bar ${progressClass}" role="progressbar"
+                  style="width: ${percentage.toFixed(2)}%" aria-valuenow="${escapeHtml(percentageDisplay)}"
+                  aria-valuemin="0" aria-valuemax="100"></div>
               </div>
             </div>
           </div>
         </div>`;
-    }).join('');
+
+      const summaryContainer = col.querySelector('.summary-content');
+      summaryContainer.innerHTML = sanitizedSummary || '<p>Visi dan misi belum tersedia.</p>';
+
+      candidateCardsContainer.appendChild(col);
+    });
   };
 
   renderCandidateCards(<?= json_encode($chartData) ?>);
