@@ -2,43 +2,42 @@
 <?= $this->section('content'); ?>
 
 <style>
-  .candidate-card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
+.candidate-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-  .candidate-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
-  }
+.candidate-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+}
 
-  .candidate-card .candidate-photo {
-    height: 200px;
-    object-fit: cover;
-  }
+.candidate-card .candidate-photo {
+  object-fit: cover;
+}
 
-  .candidate-card .status-badge {
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    z-index: 2;
-  }
+.candidate-card .status-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 2;
+}
 
-  .candidate-card.winner-card {
-    border: 2px solid #198754 !important;
-    box-shadow: 0 0.75rem 1.5rem rgba(25, 135, 84, 0.2);
-  }
+.candidate-card.winner-card {
+  border: 2px solid #198754 !important;
+  box-shadow: 0 0.75rem 1.5rem rgba(25, 135, 84, 0.2);
+}
 
-  .candidate-card.leader-card {
-    border: 2px solid #0d6efd !important;
-  }
+.candidate-card.leader-card {
+  border: 2px solid #0d6efd !important;
+}
 
-  .candidate-card.tied-card {
-    border: 2px solid #ffc107 !important;
-  }
+.candidate-card.tied-card {
+  border: 2px solid #ffc107 !important;
+}
 
-  .candidate-card .progress {
-    height: 6px;
-  }
+.candidate-card .progress {
+  height: 6px;
+}
 </style>
 
 <div class="container mt-4">
@@ -82,168 +81,165 @@
       $jumlahTopKandidat = ($valid = array_filter($topCandidates, static fn($id) => $id !== null)) ? count($valid) : count($topCandidates);
 
       $ringkasTeks = static function (?string $visi, ?string $misi): string {
-          $allowedTags = ['p', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'br', 'span', 'div'];
+        $allowedTags = ['p', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'br', 'span', 'div'];
 
-          $previousErrorLevel = libxml_use_internal_errors(true);
+        $previousErrorLevel = libxml_use_internal_errors(true);
 
-          $sanitizeFragment = static function (?string $html) use ($allowedTags): string {
-              if ($html === null || trim($html) === '') {
-                  return '';
-              }
-
-              $fragmentDom = new DOMDocument();
-              $fragmentDom->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-
-              $fragmentXpath = new DOMXPath($fragmentDom);
-
-              foreach ($fragmentXpath->query('//comment()') as $commentNode) {
-                  if ($commentNode->parentNode) {
-                      $commentNode->parentNode->removeChild($commentNode);
-                  }
-              }
-
-              foreach ($fragmentXpath->query('//*') as $node) {
-                  if (!in_array($node->nodeName, $allowedTags, true)) {
-                      $replacement = $fragmentDom->createDocumentFragment();
-                      while ($node->childNodes->length > 0) {
-                          $replacement->appendChild($node->childNodes->item(0));
-                      }
-                      if ($node->parentNode) {
-                          $node->parentNode->replaceChild($replacement, $node);
-                      }
-                      continue;
-                  }
-
-                  if ($node instanceof DOMElement) {
-                      while ($node->attributes->length > 0) {
-                          $attributeName = $node->attributes->item(0)->nodeName;
-                          if ($attributeName === null) {
-                              break;
-                          }
-
-                          $node->removeAttribute($attributeName);
-                      }
-                  }
-              }
-
-              $textPreview = trim(preg_replace('/\s+/u', ' ', $fragmentDom->textContent ?? ''));
-              if ($textPreview === '') {
-                  libxml_clear_errors();
-                  return '';
-              }
-
-              $result = trim($fragmentDom->saveHTML());
-              libxml_clear_errors();
-
-              return $result;
-          };
-
-          $truncateNode = static function (DOMNode $node, int $limit, int &$lengthCount) use (&$truncateNode): void {
-              if (!$node->hasChildNodes()) {
-                  return;
-              }
-
-              $children = [];
-              foreach ($node->childNodes as $child) {
-                  $children[] = $child;
-              }
-
-              foreach ($children as $child) {
-                  if ($lengthCount >= $limit) {
-                      $node->removeChild($child);
-                      continue;
-                  }
-
-                  if ($child->nodeType === XML_TEXT_NODE) {
-                      $text = $child->nodeValue ?? '';
-                      if ($text === '') {
-                          continue;
-                      }
-
-                      $textLength = mb_strlen($text);
-                      $remaining = $limit - $lengthCount;
-
-                      if ($textLength <= $remaining) {
-                          $lengthCount += $textLength;
-                          continue;
-                      }
-
-                      $child->nodeValue = rtrim(mb_substr($text, 0, $remaining)) . '...';
-                      $lengthCount = $limit;
-
-                      while ($child->nextSibling) {
-                          $child->parentNode->removeChild($child->nextSibling);
-                      }
-
-                      continue;
-                  }
-
-                  if ($child->nodeType === XML_ELEMENT_NODE) {
-                      $truncateNode($child, $limit, $lengthCount);
-
-                      if ($lengthCount >= $limit) {
-                          while ($child->nextSibling) {
-                              $child->parentNode->removeChild($child->nextSibling);
-                          }
-                      }
-                  } else {
-                      $node->removeChild($child);
-                  }
-              }
-          };
-
-          $visiClean = $sanitizeFragment($visi);
-          $misiClean = $sanitizeFragment($misi);
-
-          $segments = array_filter([$visiClean, $misiClean], static fn($segment) => $segment !== '');
-          if (empty($segments)) {
-              libxml_clear_errors();
-              libxml_use_internal_errors($previousErrorLevel);
-              return '';
+        $sanitizeFragment = static function (?string $html) use ($allowedTags): string {
+          if ($html === null || trim($html) === '') {
+            return '';
           }
 
-          $combinedHtml = implode('<br />', $segments);
+          $fragmentDom = new DOMDocument();
+          $fragmentDom->loadHTML('<?xml encoding="utf-8" ?>' . $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 
-          $dom = new DOMDocument();
-          $dom->loadHTML('<?xml encoding="utf-8" ?>' . $combinedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+      $fragmentXpath = new DOMXPath($fragmentDom);
 
-          $lengthCount = 0;
-          $truncateNode($dom, 160, $lengthCount);
+      foreach ($fragmentXpath->query('//comment()') as $commentNode) {
+      if ($commentNode->parentNode) {
+      $commentNode->parentNode->removeChild($commentNode);
+      }
+      }
 
-          $result = trim($dom->saveHTML());
+      foreach ($fragmentXpath->query('//*') as $node) {
+      if (!in_array($node->nodeName, $allowedTags, true)) {
+      $replacement = $fragmentDom->createDocumentFragment();
+      while ($node->childNodes->length > 0) {
+      $replacement->appendChild($node->childNodes->item(0));
+      }
+      if ($node->parentNode) {
+      $node->parentNode->replaceChild($replacement, $node);
+      }
+      continue;
+      }
 
-          libxml_clear_errors();
-          libxml_use_internal_errors($previousErrorLevel);
+      if ($node instanceof DOMElement) {
+      while ($node->attributes->length > 0) {
+      $attributeName = $node->attributes->item(0)->nodeName;
+      if ($attributeName === null) {
+      break;
+      }
 
-          return $result;
+      $node->removeAttribute($attributeName);
+      }
+      }
+      }
+
+      $textPreview = trim(preg_replace('/\s+/u', ' ', $fragmentDom->textContent ?? ''));
+      if ($textPreview === '') {
+      libxml_clear_errors();
+      return '';
+      }
+
+      $result = trim($fragmentDom->saveHTML());
+      libxml_clear_errors();
+
+      return $result;
       };
-      ?>
 
-      <?php if (!$pemilihanAktif && isset($countdownTarget) && strtotime($countdownTarget) > time()) : ?>
-      <div class="alert alert-info">
-        Pemilihan akan dimulai dalam <span id="countdown"></span>
-      </div>
-      <?php elseif ($pemilihanAktif) : ?>
-      <div class="alert alert-success">
-        <strong>Pemilihan sedang berlangsung.</strong><br>
-        Jadwal:
-        <span class="fw-bold"><?= date('d M Y H:i', strtotime($jadwal->start_time)) ?></span>
-        s/d
-        <span class="fw-bold"><?= date('d M Y H:i', strtotime($jadwal->end_time)) ?></span>
-      </div>
-      <?php elseif (isset($jadwal) && strtotime($jadwal->end_time) < time()) : ?>
-      <div class="alert alert-danger">
-        <strong>Pemilihan sudah berakhir.</strong><br>
-        Terima kasih atas partisipasi Anda.
-      </div>
-      <?php else: ?>
-      <div class="alert alert-warning">Jadwal pemilihan belum diatur.</div>
-      <?php endif; ?>
+      $truncateNode = static function (DOMNode $node, int $limit, int &$lengthCount) use (&$truncateNode): void {
+      if (!$node->hasChildNodes()) {
+      return;
+      }
 
-      <div class="mt-4">
-        <h6 class="fw-bold mb-3">Kandidat Kepala Desa</h6>
-        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="candidateCards">
-          <?php if (!empty($chartData)) : ?>
+      $children = [];
+      foreach ($node->childNodes as $child) {
+      $children[] = $child;
+      }
+
+      foreach ($children as $child) {
+      if ($lengthCount >= $limit) {
+      $node->removeChild($child);
+      continue;
+      }
+
+      if ($child->nodeType === XML_TEXT_NODE) {
+      $text = $child->nodeValue ?? '';
+      if ($text === '') {
+      continue;
+      }
+
+      $textLength = mb_strlen($text);
+      $remaining = $limit - $lengthCount;
+
+      if ($textLength <= $remaining) { $lengthCount +=$textLength; continue; } $child->nodeValue =
+        rtrim(mb_substr($text, 0, $remaining)) . '...';
+        $lengthCount = $limit;
+
+        while ($child->nextSibling) {
+        $child->parentNode->removeChild($child->nextSibling);
+        }
+
+        continue;
+        }
+
+        if ($child->nodeType === XML_ELEMENT_NODE) {
+        $truncateNode($child, $limit, $lengthCount);
+
+        if ($lengthCount >= $limit) {
+        while ($child->nextSibling) {
+        $child->parentNode->removeChild($child->nextSibling);
+        }
+        }
+        } else {
+        $node->removeChild($child);
+        }
+        }
+        };
+
+        $visiClean = $sanitizeFragment($visi);
+        $misiClean = $sanitizeFragment($misi);
+
+        $segments = array_filter([$visiClean, $misiClean], static fn($segment) => $segment !== '');
+        if (empty($segments)) {
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousErrorLevel);
+        return '';
+        }
+
+        $combinedHtml = implode('<br />', $segments);
+
+        $dom = new DOMDocument();
+        $dom->loadHTML('
+        <?xml encoding="utf-8" ?>' . $combinedHtml, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+
+        $lengthCount = 0;
+        $truncateNode($dom, 160, $lengthCount);
+
+        $result = trim($dom->saveHTML());
+
+        libxml_clear_errors();
+        libxml_use_internal_errors($previousErrorLevel);
+
+        return $result;
+        };
+        ?>
+
+        <?php if (!$pemilihanAktif && isset($countdownTarget) && strtotime($countdownTarget) > time()) : ?>
+        <div class="alert alert-info">
+          Pemilihan akan dimulai dalam <span id="countdown"></span>
+        </div>
+        <?php elseif ($pemilihanAktif) : ?>
+        <div class="alert alert-success">
+          <strong>Pemilihan sedang berlangsung.</strong><br>
+          Jadwal:
+          <span class="fw-bold"><?= date('d M Y H:i', strtotime($jadwal->start_time)) ?></span>
+          s/d
+          <span class="fw-bold"><?= date('d M Y H:i', strtotime($jadwal->end_time)) ?></span>
+        </div>
+        <?php elseif (isset($jadwal) && strtotime($jadwal->end_time) < time()) : ?>
+        <div class="alert alert-danger">
+          <strong>Pemilihan sudah berakhir.</strong><br>
+          Terima kasih atas partisipasi Anda.
+        </div>
+        <?php else: ?>
+        <div class="alert alert-warning">Jadwal pemilihan belum diatur.</div>
+        <?php endif; ?>
+
+        <div class="mt-4">
+          <h6 class="fw-bold mb-3">Kandidat Kepala Desa</h6>
+          <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4" id="candidateCards">
+            <?php if (!empty($chartData)) : ?>
             <?php foreach ($chartData as $index => $candidate) :
               $jumlahSuara = (int)($candidate['jumlah'] ?? 0);
               $persentase = $totalSuara > 0 ? round(($jumlahSuara / $totalSuara) * 100, 1) : 0;
@@ -297,42 +293,42 @@
                 $badgeClass = 'bg-info';
               }
             ?>
-              <div class="col">
-                <div class="<?= $cardClasses ?>" data-candidate-id="<?= esc($candidate['id_candidate']) ?>">
-                  <div class="position-relative">
-                    <img src="<?= esc($fotoCalon) ?>" class="card-img-top candidate-photo"
-                      alt="Foto <?= esc($namaCalon) ?>">
-                    <?php if ($statusBadge) : ?>
-                      <span class="badge <?= esc($badgeClass) ?> status-badge"><?= esc($statusBadge) ?></span>
-                    <?php endif; ?>
+            <div class="col">
+              <div class="<?= $cardClasses ?>" data-candidate-id="<?= esc($candidate['id_candidate']) ?>">
+                <div class="position-relative">
+                  <img src="<?= esc($fotoCalon) ?>" class="card-img-top candidate-photo"
+                    alt="Foto <?= esc($namaCalon) ?>">
+                  <?php if ($statusBadge) : ?>
+                  <span class="badge <?= esc($badgeClass) ?> status-badge"><?= esc($statusBadge) ?></span>
+                  <?php endif; ?>
+                </div>
+                <div class="card-body d-flex flex-column">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="card-title mb-0"><?= esc($namaCalon) ?></h5>
+                    <span class="badge bg-primary-subtle text-primary-emphasis">No. <?= esc($nomorUrut) ?></span>
                   </div>
-                  <div class="card-body d-flex flex-column">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                      <h5 class="card-title mb-0"><?= esc($namaCalon) ?></h5>
-                      <span class="badge bg-primary-subtle text-primary-emphasis">No. <?= esc($nomorUrut) ?></span>
-                    </div>
-                    <?php
-                      if ($ringkasan === '') {
-                          $ringkasan = '<p>Visi dan misi belum tersedia.</p>';
-                      }
+                  <?php
+                    if ($ringkasan === '') {
+                      $ringkasan = '<p>Visi dan misi belum tersedia.</p>';
+                    }
                     ?>
-                    <div class="text-muted small flex-grow-1 summary-content"><?= $ringkasan ?></div>
-                    <div class="mt-3">
-                      <div class="d-flex justify-content-between small mb-1">
-                        <span class="fw-semibold"><?= esc(number_format($jumlahSuara)) ?> suara</span>
-                        <span class="text-muted"><?= esc(number_format($persentase, 1)) ?>%</span>
-                      </div>
-                      <div class="progress">
-                        <div class="progress-bar <?= esc($progressClass) ?>" role="progressbar"
-                          style="width: <?= esc($persentase) ?>%" aria-valuenow="<?= esc($persentase) ?>"
-                          aria-valuemin="0" aria-valuemax="100"></div>
-                      </div>
+                  <div class="text-muted small flex-grow-1 summary-content"><?= $ringkasan ?></div>
+                  <div class="mt-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                      <span class="fw-semibold"><?= esc(number_format($jumlahSuara)) ?> suara</span>
+                      <span class="text-muted"><?= esc(number_format($persentase, 1)) ?>%</span>
+                    </div>
+                    <div class="progress">
+                      <div class="progress-bar <?= esc($progressClass) ?>" role="progressbar"
+                        style="width: <?= esc($persentase) ?>%" aria-valuenow="<?= esc($persentase) ?>"
+                        aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
             <?php endforeach; ?>
-          <?php else : ?>
+            <?php else : ?>
             <div class="col">
               <div class="card candidate-card h-100 shadow-sm border-0">
                 <div class="card-body d-flex flex-column justify-content-center text-center">
@@ -340,43 +336,43 @@
                 </div>
               </div>
             </div>
-          <?php endif; ?>
+            <?php endif; ?>
+          </div>
         </div>
-      </div>
 
 
-      <?php if ($pemilihanAktif): ?>
-      <div class="mb-4">
-        <h6>Statistik Pemilihan diupdate automatis tiap 30 Detik</h6>
-        <canvas id="chartSuara" style="max-width: 300px; max-height: 300px; margin: auto;"></canvas>
-      </div>
+        <?php if ($pemilihanAktif): ?>
+        <div class="mb-4">
+          <h6>Statistik Pemilihan diupdate automatis tiap 30 Detik</h6>
+          <canvas id="chartSuara" style="max-width: 300px; max-height: 300px; margin: auto;"></canvas>
+        </div>
 
-      <h6>Data Pemilih Yang Sudah Voting</h6>
-      <div class="table-responsive">
-        <table id="tabelVoting" class="table table-striped table-bordered">
-          <thead>
-            <tr>
-              <th>No</th>
-              <th>NIK</th>
-              <th>Nama Pemilih</th>
-              <th>Waktu Voting</th>
-              <!-- <th>Calon Dipilih</th> -->
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($votingData as $i => $vote): ?>
-            <tr>
-              <td><?= $i + 1 ?></td>
-              <td><?= esc($vote['nik']) ?></td>
-              <td><?= esc($vote['nama']) ?></td>
-              <td><?= esc($vote['voted_at']) ?></td>
-              <!-- <td><?= esc($vote['nama_calon']) ?></td> -->
-            </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-      <?php endif; ?>
+        <h6>Data Pemilih Yang Sudah Voting</h6>
+        <div class="table-responsive">
+          <table id="tabelVoting" class="table table-striped table-bordered">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>NIK</th>
+                <th>Nama Pemilih</th>
+                <th>Waktu Voting</th>
+                <!-- <th>Calon Dipilih</th> -->
+              </tr>
+            </thead>
+            <tbody>
+              <?php foreach ($votingData as $i => $vote): ?>
+              <tr>
+                <td><?= $i + 1 ?></td>
+                <td><?= esc($vote['nik']) ?></td>
+                <td><?= esc($vote['nama']) ?></td>
+                <td><?= esc($vote['voted_at']) ?></td>
+                <!-- <td><?= esc($vote['nama_calon']) ?></td> -->
+              </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <?php endif; ?>
     </div>
 
   </div>
@@ -452,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
       '>': '&gt;',
       '"': '&quot;',
       "'": '&#039;'
-    }[ch] || ch));
+    } [ch] || ch));
   };
 
   const allowedSummaryTags = ['p', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li', 'br', 'span', 'div'];
@@ -555,7 +551,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.createElement('div');
     container.innerHTML = parts.join('<br />');
 
-    const state = { count: 0 };
+    const state = {
+      count: 0
+    };
     truncateNode(container, maxLength, state);
 
     if (!container.textContent.trim()) {
@@ -648,7 +646,8 @@ document.addEventListener('DOMContentLoaded', function() {
         statusBadge = 'Menunggu Pemilihan';
       }
 
-      const badgeHtml = statusBadge ? `<span class="badge ${badgeClass} status-badge">${escapeHtml(statusBadge)}</span>` : '';
+      const badgeHtml = statusBadge ?
+        `<span class="badge ${badgeClass} status-badge">${escapeHtml(statusBadge)}</span>` : '';
 
       const col = document.createElement('div');
       col.className = 'col';
