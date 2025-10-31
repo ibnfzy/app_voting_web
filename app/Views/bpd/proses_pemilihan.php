@@ -408,8 +408,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"
-  integrity="sha256-9F9CAu7FTqWCwGxyPH+lJaSm+puSw0t5Yr2e9+xcs1E=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/sanitize-html@2.17.0/index.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   let chartInstance;
@@ -513,9 +512,9 @@ document.addEventListener('DOMContentLoaded', function() {
       return '';
     }
 
-    const sanitized = DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: allowedSummaryTags,
-      ALLOWED_ATTR: []
+    const sanitized = sanitizeHtml(html, {
+      allowedTags: allowedSummaryTags,
+      allowedAttributes: {}
     });
 
     const wrapper = document.createElement('div');
