@@ -114,8 +114,15 @@
                       continue;
                   }
 
-                  while ($node->attributes->length > 0) {
-                      $node->removeAttribute($node->attributes->item(0)->nodeName);
+                  if ($node instanceof DOMElement) {
+                      while ($node->attributes->length > 0) {
+                          $attributeName = $node->attributes->item(0)->nodeName;
+                          if ($attributeName === null) {
+                              break;
+                          }
+
+                          $node->removeAttribute($attributeName);
+                      }
                   }
               }
 
