@@ -408,7 +408,7 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sanitize-html@2.17.0/index.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sanitize-html@2.11.3/dist/sanitize-html.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   let chartInstance;
