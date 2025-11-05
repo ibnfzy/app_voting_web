@@ -14,6 +14,14 @@ class PanitiaPanel extends BaseController
         $this->db = db_connect();
     }
 
+    protected function getLatestSchedule()
+    {
+        return $this->db->table('schedules')
+            ->orderBy('start_time', 'DESC')
+            ->get(1)
+            ->getRow();
+    }
+
     public function index()
     {
         return view('panitia/index', [
@@ -125,9 +133,7 @@ class PanitiaPanel extends BaseController
     public function prosesPemilihan()
     {
         // Ambil jadwal aktif
-        $jadwal = $this->db->table('schedules')
-            ->orderBy('start_time', 'DESC')
-            ->get(1)->getRow();
+        $jadwal = $this->getLatestSchedule();
 
         $now = time(); // timestamp sekarang (integer)
         $pemilihanAktif = false;
@@ -144,18 +150,34 @@ class PanitiaPanel extends BaseController
             }
         }
 
+        $scheduleId = $jadwal ? $jadwal->id_schedule : null;
+        $voteJoinCondition = 'votes.candidate_id = candidates.id_candidate';
+        if ($scheduleId) {
+            $voteJoinCondition .= ' AND votes.schedule_id = ' . (int) $scheduleId;
+        } else {
+            $voteJoinCondition .= ' AND 1 = 0';
+        }
+
         // Data Chart: jumlah suara per calon
         $chartData = $this->db->table('candidates')
             ->select('candidates.id_candidate, candidates.name, candidates.photo, candidates.visi, candidates.misi, COUNT(votes.id_vote) AS jumlah')
-            ->join('votes', 'votes.candidate_id = candidates.id_candidate', 'left')
+            ->join('votes', $voteJoinCondition, 'left')
             ->groupBy('candidates.id_candidate')
             ->get()->getResultArray();
 
         // Data Voting Table: daftar pemilih yang sudah voting
-        $votingData = $this->db->table('votes')
+        $votingQuery = $this->db->table('votes')
             ->select('pemilih.nik, pemilih.name AS nama, votes.voted_at, candidates.name AS nama_calon')
             ->join('pemilih', 'pemilih.id_pemilih = votes.pemilih_id', 'left')
-            ->join('candidates', 'candidates.id_candidate = votes.candidate_id', 'left')
+            ->join('candidates', 'candidates.id_candidate = votes.candidate_id', 'left');
+
+        if ($scheduleId) {
+            $votingQuery->where('votes.schedule_id', $scheduleId);
+        } else {
+            $votingQuery->where('1 = 0');
+        }
+
+        $votingData = $votingQuery
             ->orderBy('votes.voted_at', 'DESC')
             ->get()->getResultArray();
 
@@ -172,17 +194,35 @@ class PanitiaPanel extends BaseController
     public function getVotingData()
     {
         // Data Chart: jumlah suara per calon
+        $jadwal = $this->getLatestSchedule();
+        $scheduleId = $jadwal ? $jadwal->id_schedule : null;
+
+        $voteJoinCondition = 'votes.candidate_id = candidates.id_candidate';
+        if ($scheduleId) {
+            $voteJoinCondition .= ' AND votes.schedule_id = ' . (int) $scheduleId;
+        } else {
+            $voteJoinCondition .= ' AND 1 = 0';
+        }
+
         $chartData = $this->db->table('candidates')
             ->select('candidates.id_candidate, candidates.name, candidates.photo, candidates.visi, candidates.misi, COUNT(votes.id_vote) AS jumlah')
-            ->join('votes', 'votes.candidate_id = candidates.id_candidate', 'left')
+            ->join('votes', $voteJoinCondition, 'left')
             ->groupBy('candidates.id_candidate')
             ->get()->getResultArray();
 
         // Data Voting Table: daftar pemilih yang sudah voting
-        $votingData = $this->db->table('votes')
+        $votingQuery = $this->db->table('votes')
             ->select('pemilih.nik, pemilih.name AS nama, votes.voted_at, candidates.name AS nama_calon')
             ->join('pemilih', 'pemilih.id_pemilih = votes.pemilih_id', 'left')
-            ->join('candidates', 'candidates.id_candidate = votes.candidate_id', 'left')
+            ->join('candidates', 'candidates.id_candidate = votes.candidate_id', 'left');
+
+        if ($scheduleId) {
+            $votingQuery->where('votes.schedule_id', $scheduleId);
+        } else {
+            $votingQuery->where('1 = 0');
+        }
+
+        $votingData = $votingQuery
             ->orderBy('votes.voted_at', 'DESC')
             ->get()->getResultArray();
 
@@ -210,14 +250,24 @@ class PanitiaPanel extends BaseController
 
     public function laporan()
     {
-        $jadwal = $this->db->table('schedules')->orderBy('id_schedule', 'DESC')->get()->getRow();
+        $jadwal = $this->getLatestSchedule();
+        $scheduleId = $jadwal ? $jadwal->id_schedule : null;
 
         $totalPemilih = $this->db->table('pemilih')->countAllResults();
-        $totalVotes = $this->db->table('votes')->countAllResults();
+        $totalVotes = $scheduleId
+            ? $this->db->table('votes')->where('schedule_id', $scheduleId)->countAllResults()
+            : 0;
+
+        $voteJoinCondition = 'v.candidate_id = c.id_candidate';
+        if ($scheduleId) {
+            $voteJoinCondition .= ' AND v.schedule_id = ' . (int) $scheduleId;
+        } else {
+            $voteJoinCondition .= ' AND 1 = 0';
+        }
 
         $hasil = $this->db->table('candidates c')
             ->select('c.id_candidate, c.name, c.visi, c.misi, c.photo, COUNT(v.id_vote) as jumlah')
-            ->join('votes v', 'v.candidate_id = c.id_candidate', 'left')
+            ->join('votes v', $voteJoinCondition, 'left')
             ->groupBy('c.id_candidate')
             ->get()
             ->getResult();

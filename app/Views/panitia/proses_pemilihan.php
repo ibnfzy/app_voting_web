@@ -49,8 +49,8 @@
         <a class="btn btn-primary" href="/PanitiaPanel/Laporan" target="_blank">
           Lihat Laporan Pemilihan
         </a>
-        <button class="btn btn-secondary disabled">
-          Pemilihan Telah Berakhir
+        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#aturJadwalModal">
+          Pilih Jadwal Pemilihan Baru
         </button>
         <?php else: ?>
         <button class="btn btn-primary <?= $pemilihanAktif ? 'disabled' : '' ?>" data-bs-toggle="modal"
