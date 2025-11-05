@@ -248,7 +248,7 @@ class BPDPanel extends BaseController
             ->get()
             ->getResultArray();
 
-        return view('bpd/laporan_pemilih', [
+        return view('reports/pemilih', [
             'totalPemilih' => $totalPemilih,
             'totalValidated' => $totalValidated,
             'totalNotValidated' => $totalNotValidated,
