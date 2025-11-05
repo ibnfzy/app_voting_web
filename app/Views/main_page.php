@@ -29,17 +29,35 @@
 
   <!-- Navbar -->
   <nav id="navbar" class="fixed top-0 left-0 w-full z-50 transition-all duration-300 bg-transparent text-white">
-    <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-      <h1 class="text-2xl font-bold">PILKADES</h1>
-      <div class="space-x-6 hidden md:block">
-        <a href="#jadwal" class="hover:text-white/80 font-medium transition">Jadwal</a>
-        <a href="#kandidat" class="hover:text-white/80 font-medium transition">Kandidat</a>
-        <a href="https://drive.google.com/file/d/1auPci5FE5IFscfA618SQD0gwlItjNehV/view?usp=sharing" class="hover:text-white/80 font-medium transition" target="_blank">Download APK Pemilihan</a>
-        <a href="/BPDPanel" class="hover:text-white/80 font-medium transition">Login BPD</a>
-        <a href="/PanitiaPanel" class="hover:text-white/80 font-medium transition">Login Panitia</a>
-      </div>
+  <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <h1 class="text-2xl font-bold">PILKADES</h1>
+
+    <!-- Tombol Hamburger -->
+    <button id="menuToggle" class="md:hidden focus:outline-none">
+      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+      </svg>
+    </button>
+
+    <!-- Menu Desktop -->
+    <div class="space-x-6 hidden md:flex">
+      <a href="#jadwal" class="hover:text-white/80 font-medium transition">Jadwal</a>
+      <a href="#kandidat" class="hover:text-white/80 font-medium transition">Kandidat</a>
+      <a href="https://expo.dev/artifacts/eas/jChTXEzp8YmrqkzpVGkspt.apk" class="hover:text-white/80 font-medium transition" target="_blank">Download APK Pemilihan</a>
+      <a href="/BPDPanel" class="hover:text-white/80 font-medium transition">Login BPD</a>
+      <a href="/PanitiaPanel" class="hover:text-white/80 font-medium transition">Login Panitia</a>
     </div>
-  </nav>
+  </div>
+
+  <!-- Menu Mobile -->
+  <div id="mobileMenu" class="md:hidden hidden px-4 pb-4 bg-emerald-600 text-white space-y-2">
+    <a href="#jadwal" class="block font-medium hover:text-white/80 transition">Jadwal</a>
+    <a href="#kandidat" class="block font-medium hover:text-white/80 transition">Kandidat</a>
+    <a href="https://expo.dev/artifacts/eas/jChTXEzp8YmrqkzpVGkspt.apk" class="block font-medium hover:text-white/80 transition" target="_blank">Download APK Pemilihan</a>
+    <a href="/BPDPanel" class="block font-medium hover:text-white/80 transition">Login BPD</a>
+    <a href="/PanitiaPanel" class="block font-medium hover:text-white/80 transition">Login Panitia</a>
+  </div>
+</nav>
   <!-- Hero Section -->
   <section class="bg-gradient-to-b from-emerald-600 to-teal-500 text-white pt-40 pb-20 text-center">
     <h2 class="text-4xl font-extrabold fade-in-up">Pemilihan Kepala Desa</h2>
@@ -128,6 +146,13 @@
   </footer>
 
   <script>
+  // Toggle menu mobile
+    const menuToggle = document.getElementById("menuToggle");
+    const mobileMenu = document.getElementById("mobileMenu");
+
+    menuToggle.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
     const endTime = new Date(document.getElementById("endTime").innerText).getTime();
 
     function updateCountdown() {
