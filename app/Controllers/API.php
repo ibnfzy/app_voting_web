@@ -14,6 +14,29 @@ class API extends BaseController
         $this->db = db_connect();
     }
 
+    protected function getLatestSchedule(): ?array
+    {
+        return $this->db->table('schedules')
+            ->orderBy('start_time', 'DESC')
+            ->get(1)
+            ->getRowArray();
+    }
+
+    protected function getPemilihVoteForSchedule(int $pemilihId, ?array $schedule = null): ?array
+    {
+        $schedule = $schedule ?? $this->getLatestSchedule();
+
+        if (!$schedule) {
+            return null;
+        }
+
+        return $this->db->table('votes')
+            ->where('pemilih_id', $pemilihId)
+            ->where('schedule_id', $schedule['id_schedule'])
+            ->get()
+            ->getRowArray();
+    }
+
     protected function apiError(string $message, int $code = 400)
     {
         return \Config\Services::response()
@@ -47,11 +70,9 @@ class API extends BaseController
             return $this->apiError('invalid account', 400);
         }
 
-        // Tambahkan info voting
-        $hasVoted = !empty($pemilih['voted_for'] ?? null);
-        $pemilih['hasVoted'] = $hasVoted;
-        $pemilih['votedFor'] = $pemilih['voted_for'] ?? null;
-        unset($pemilih['voted_for']);
+        $vote = $this->getPemilihVoteForSchedule((int) $pemilih['id_pemilih']);
+        $pemilih['hasVoted'] = (bool) $vote;
+        $pemilih['votedFor'] = $vote ? (int) $vote['candidate_id'] : null;
 
         return $this->response->setJSON([
             'status' => 'success',
@@ -158,9 +179,9 @@ class API extends BaseController
 
             $pemilihId = $this->db->insertID();
             $getPemilih = $this->db->table('pemilih')->where('id_pemilih', $pemilihId)->get()->getRowArray();
-            $getPemilih['hasVoted'] = !empty($getPemilih['voted_for'] ?? null);
-            $getPemilih['votedFor'] = $getPemilih['voted_for'] ?? null;
-            unset($getPemilih['voted_for']);
+            $vote = $this->getPemilihVoteForSchedule((int) $getPemilih['id_pemilih']);
+            $getPemilih['hasVoted'] = (bool) $vote;
+            $getPemilih['votedFor'] = $vote ? (int) $vote['candidate_id'] : null;
 
             return $this->response->setJSON([
                 'status' => 'registration successful',
@@ -248,9 +269,7 @@ class API extends BaseController
 
     public function hasVoted($pemilih_id)
     {
-        $votes = $this->db->table('votes')->where('pemilih_id', $pemilih_id)->get()->getRowArray();
-
-        return ($votes != null);
+        return $this->getPemilihVoteForSchedule((int) $pemilih_id) !== null;
     }
 
     public function checkVotingStatus()
@@ -266,7 +285,7 @@ class API extends BaseController
         }
 
         // Ambil jadwal pemilihan
-        $schedule = $this->db->table('schedules')->get()->getRowArray();
+        $schedule = $this->getLatestSchedule();
 
         if (!$schedule) {
             return $this->response->setJSON([
@@ -280,10 +299,7 @@ class API extends BaseController
         $canVote = ($now >= $schedule['start_time'] && $now <= $schedule['end_time']);
 
         // Cek apakah sudah pernah voting
-        $vote = $this->db->table('votes')
-            ->where('pemilih_id', $pemilihId)
-            ->get()
-            ->getRowArray();
+        $vote = $this->getPemilihVoteForSchedule((int) $pemilihId, $schedule);
 
         $hasVoted = $vote ? true : false;
 
@@ -312,10 +328,7 @@ class API extends BaseController
         $now         = time(); // pakai timestamp biar lebih aman
 
         // Ambil jadwal aktif terbaru
-        $schedule = $this->db->table('schedules')
-            ->orderBy('start_time', 'DESC')
-            ->get(1)
-            ->getRowArray();
+        $schedule = $this->getLatestSchedule();
 
         if (!$schedule) {
             return $this->response->setJSON([
@@ -338,10 +351,7 @@ class API extends BaseController
         }
 
         // Cek apakah pemilih sudah melakukan voting
-        $existingVote = $this->db->table('votes')
-            ->where('pemilih_id', $pemilihId)
-            ->get()
-            ->getRow();
+        $existingVote = $this->getPemilihVoteForSchedule((int) $pemilihId, $schedule);
 
         if ($existingVote) {
             return $this->response->setJSON([
@@ -353,8 +363,9 @@ class API extends BaseController
 
         // Simpan voting
         $saved = $this->db->table('votes')->insert([
-            'pemilih_id'   => $pemilihId,
-            'candidate_id' => $candidateId,
+            'pemilih_id'   => (int) $pemilihId,
+            'candidate_id' => (int) $candidateId,
+            'schedule_id'  => $schedule['id_schedule'],
             'voted_at'     => date('Y-m-d H:i:s', $now)
         ]);
 
@@ -374,7 +385,7 @@ class API extends BaseController
 
     public function getSchedule()
     {
-        $schedule = $this->db->table('schedules')->get()->getRowArray();
+        $schedule = $this->getLatestSchedule();
 
         if (!$schedule) {
             return $this->response->setStatusCode(400)->setJSON([
@@ -397,9 +408,18 @@ class API extends BaseController
 
     public function getResults()
     {
+        $schedule = $this->getLatestSchedule();
+
+        $joinCondition = 'v.candidate_id = c.id_candidate';
+        if ($schedule) {
+            $joinCondition .= ' AND v.schedule_id = ' . (int) $schedule['id_schedule'];
+        } else {
+            $joinCondition .= ' AND 1 = 0';
+        }
+
         $results = $this->db->table('candidates c')
             ->select('c.id_candidate AS candidate_id, c.name AS candidate_name, COUNT(v.id_vote) AS vote_count')
-            ->join('votes v', 'v.candidate_id = c.id_candidate', 'left')
+            ->join('votes v', $joinCondition, 'left')
             ->groupBy('c.id_candidate')
             ->orderBy('vote_count', 'DESC')
             ->get()
@@ -413,9 +433,18 @@ class API extends BaseController
 
     public function getWinner()
     {
+        $schedule = $this->getLatestSchedule();
+
+        $joinCondition = 'v.candidate_id = c.id_candidate';
+        if ($schedule) {
+            $joinCondition .= ' AND v.schedule_id = ' . (int) $schedule['id_schedule'];
+        } else {
+            $joinCondition .= ' AND 1 = 0';
+        }
+
         $results = $this->db->table('candidates c')
             ->select('c.id_candidate AS candidate_id, c.name AS candidate_name, c.photo, c.visi, c.misi, COUNT(v.id_vote) AS vote_count')
-            ->join('votes v', 'v.candidate_id = c.id_candidate', 'left')
+            ->join('votes v', $joinCondition, 'left')
             ->groupBy('c.id_candidate')
             ->orderBy('vote_count', 'DESC')
             ->get()
