@@ -5,10 +5,14 @@
 <div class="row">
   <div class="col-12">
     <div class="card">
-      <div class="card-header">
-        <div class="card-title fw-bold">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-title fw-bold mb-0">
           Data Pemilih
         </div>
+        <a class="btn btn-primary" href="/PanitiaPanel/Laporan/Pemilih" target="_blank">
+          <i class="fa-solid fa-print me-1"></i>
+          Cetak Laporan
+        </a>
       </div>
       <div class="card-body table-responsive">
         <table class="table table-bordered datatables">

@@ -279,4 +279,25 @@ class PanitiaPanel extends BaseController
             'hasil' => $hasil
         ]);
     }
+
+    public function laporanPemilih()
+    {
+        $totalPemilih = $this->db->table('pemilih')->countAllResults();
+        $totalValidated = $this->db->table('pemilih')->where('validate', 1)->countAllResults();
+        $totalNotValidated = $this->db->table('pemilih')->where('validate', 0)->countAllResults();
+        $totalInvalid = $this->db->table('pemilih')->where('validate', 2)->countAllResults();
+
+        $pemilih = $this->db->table('pemilih')
+            ->orderBy('name', 'ASC')
+            ->get()
+            ->getResultArray();
+
+        return view('reports/pemilih', [
+            'totalPemilih' => $totalPemilih,
+            'totalValidated' => $totalValidated,
+            'totalNotValidated' => $totalNotValidated,
+            'totalInvalid' => $totalInvalid,
+            'pemilih' => $pemilih,
+        ]);
+    }
 }

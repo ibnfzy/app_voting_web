@@ -131,19 +131,19 @@
   <div class="stats">
     <div class="card">
       <h3>Total Pemilih</h3>
-      <p><?= $totalPemilih ?></p>
+      <p><?= esc($totalPemilih) ?></p>
     </div>
     <div class="card">
       <h3>Sudah Validasi</h3>
-      <p><?= $totalValidated ?></p>
+      <p><?= esc($totalValidated) ?></p>
     </div>
     <div class="card">
       <h3>Belum Validasi</h3>
-      <p><?= $totalNotValidated ?></p>
+      <p><?= esc($totalNotValidated) ?></p>
     </div>
     <div class="card">
       <h3>Data Tidak Valid</h3>
-      <p><?= $totalInvalid ?></p>
+      <p><?= esc($totalInvalid) ?></p>
     </div>
   </div>
 
@@ -178,17 +178,17 @@
         <td style="text-align: center;">
           <?= $no++ ?>
         </td>
-        <td><?= esc($row['nik']) ?></td>
-        <td><?= esc($row['name']) ?></td>
-        <td><?= esc($row['jenis_kelamin']) ?></td>
+        <td><?= esc($row['nik'] ?? '') ?></td>
+        <td><?= esc($row['name'] ?? '') ?></td>
+        <td><?= esc($row['jenis_kelamin'] ?? '') ?></td>
         <td><?= esc($ttl) ?></td>
-        <td><?= esc($row['alamat']) ?></td>
+        <td><?= esc($row['alamat'] ?? '') ?></td>
         <td><?= esc($rtrw) ?></td>
-        <td><?= esc($row['kelurahan']) ?></td>
-        <td><?= esc($row['kecamatan']) ?></td>
-        <td><?= esc($row['kabupaten']) ?></td>
-        <td><?= esc($row['provinsi']) ?></td>
-        <td><?= esc($row['email']) ?></td>
+        <td><?= esc($row['kelurahan'] ?? '') ?></td>
+        <td><?= esc($row['kecamatan'] ?? '') ?></td>
+        <td><?= esc($row['kabupaten'] ?? '') ?></td>
+        <td><?= esc($row['provinsi'] ?? '') ?></td>
+        <td><?= esc($row['email'] ?? '') ?></td>
         <td style="text-align: center;">
           <?php if ((int) ($row['validate'] ?? 0) === 1): ?>
           <span class="status-badge status-valid">Sudah Validasi</span>
@@ -198,14 +198,14 @@
           <span class="status-badge status-not-valid">Belum Validasi</span>
           <?php endif; ?>
         </td>
-        <td><?= esc($row['registered_at']) ?></td>
+        <td><?= esc($row['registered_at'] ?? '') ?></td>
       </tr>
       <?php endforeach; ?>
     </tbody>
   </table>
 
   <div class="footer">
-    <p>Banggai, <?= date('d M Y') ?></p>
+    <p>Banggai, <?= esc(date('d M Y')) ?></p>
     <p><strong>Ketua Panitia</strong></p>
     <br><br>
     <p>_________________________</p>

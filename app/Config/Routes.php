@@ -48,6 +48,7 @@ $routes->group('PanitiaPanel', function (RouteCollection $routes) {
   $routes->post('aturJadwal', 'PanitiaPanel::aturJadwal');
   $routes->get('ResetPemilhan', 'PanitiaPanel::reset_pemilihan');
   $routes->get('Laporan', 'PanitiaPanel::laporan');
+  $routes->get('Laporan/Pemilih', 'PanitiaPanel::laporanPemilih');
 });
 
 $routes->group('API', function (RouteCollection $routes) {
