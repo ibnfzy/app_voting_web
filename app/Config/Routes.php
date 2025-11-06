@@ -30,6 +30,7 @@ $routes->group('BPDPanel', function (RouteCollection $routes) {
   $routes->post('aturJadwal', 'BPDPanel::aturJadwal');
   $routes->get('ResetPemilhan', 'BPDPanel::reset_pemilihan');
   $routes->get('Laporan', 'BPDPanel::laporan');
+  $routes->get('Laporan/(:num)', 'BPDPanel::laporan/$1');
   $routes->get('Laporan/Pemilih', 'BPDPanel::laporanPemilih');
 });
 
@@ -48,6 +49,7 @@ $routes->group('PanitiaPanel', function (RouteCollection $routes) {
   $routes->post('aturJadwal', 'PanitiaPanel::aturJadwal');
   $routes->get('ResetPemilhan', 'PanitiaPanel::reset_pemilihan');
   $routes->get('Laporan', 'PanitiaPanel::laporan');
+  $routes->get('Laporan/(:num)', 'PanitiaPanel::laporan/$1');
   $routes->get('Laporan/Pemilih', 'PanitiaPanel::laporanPemilih');
 });
 

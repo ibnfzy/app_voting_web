@@ -4,6 +4,7 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\Database\SQLite3\Table;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class BPDPanel extends BaseController
@@ -20,6 +21,14 @@ class BPDPanel extends BaseController
         return $this->db->table('schedules')
             ->orderBy('start_time', 'DESC')
             ->get(1)
+            ->getRow();
+    }
+
+    protected function getScheduleById(int $scheduleId)
+    {
+        return $this->db->table('schedules')
+            ->where('id_schedule', $scheduleId)
+            ->get()
             ->getRow();
     }
 
@@ -137,12 +146,18 @@ class BPDPanel extends BaseController
             ->orderBy('votes.voted_at', 'DESC')
             ->get()->getResultArray();
 
+        $schedules = $this->db->table('schedules')
+            ->orderBy('start_time', 'DESC')
+            ->get()
+            ->getResultArray();
+
         return view('bpd/proses_pemilihan', [
             'pemilihanAktif' => $pemilihanAktif,
             'chartData' => $chartData,
             'votingData' => $votingData,
             'countdownTarget' => $countdownTarget,
-            'jadwal' => $jadwal
+            'jadwal' => $jadwal,
+            'schedules' => $schedules
         ]);
     }
 
@@ -204,9 +219,18 @@ class BPDPanel extends BaseController
         return redirect()->to('/BPDPanel/prosesPemilihan')->with('message', 'Jadwal pemilihan berhasil diatur.');
     }
 
-    public function laporan()
+    public function laporan($scheduleId = null)
     {
-        $jadwal = $this->getLatestSchedule();
+        if ($scheduleId !== null) {
+            $jadwal = $this->getScheduleById((int) $scheduleId);
+
+            if (!$jadwal) {
+                throw PageNotFoundException::forPageNotFound('Jadwal tidak ditemukan.');
+            }
+        } else {
+            $jadwal = $this->getLatestSchedule();
+        }
+
         $scheduleId = $jadwal ? $jadwal->id_schedule : null;
 
         $totalPemilih = $this->db->table('pemilih')->countAllResults();
