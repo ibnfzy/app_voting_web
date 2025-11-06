@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Controllers\BaseController;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class PanitiaPanel extends BaseController
@@ -19,6 +20,14 @@ class PanitiaPanel extends BaseController
         return $this->db->table('schedules')
             ->orderBy('start_time', 'DESC')
             ->get(1)
+            ->getRow();
+    }
+
+    protected function getScheduleById(int $scheduleId)
+    {
+        return $this->db->table('schedules')
+            ->where('id_schedule', $scheduleId)
+            ->get()
             ->getRow();
     }
 
@@ -190,6 +199,19 @@ class PanitiaPanel extends BaseController
         ]);
     }
 
+    public function jadwal()
+    {
+        $schedules = $this->db->table('schedules')
+            ->orderBy('start_time', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        return view('panitia/jadwal_pemilihan', [
+            'schedules' => $schedules,
+            'currentTime' => time()
+        ]);
+    }
+
     // Endpoint untuk polling data Chart dan DataTable (AJAX)
     public function getVotingData()
     {
@@ -248,9 +270,18 @@ class PanitiaPanel extends BaseController
         return redirect()->to('/PanitiaPanel/prosesPemilihan')->with('message', 'Jadwal pemilihan berhasil diatur.');
     }
 
-    public function laporan()
+    public function laporan($scheduleId = null)
     {
-        $jadwal = $this->getLatestSchedule();
+        if ($scheduleId !== null) {
+            $jadwal = $this->getScheduleById((int) $scheduleId);
+
+            if (!$jadwal) {
+                throw PageNotFoundException::forPageNotFound('Jadwal tidak ditemukan.');
+            }
+        } else {
+            $jadwal = $this->getLatestSchedule();
+        }
+
         $scheduleId = $jadwal ? $jadwal->id_schedule : null;
 
         $totalPemilih = $this->db->table('pemilih')->countAllResults();

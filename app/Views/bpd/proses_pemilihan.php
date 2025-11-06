@@ -45,8 +45,11 @@
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="mb-0">Proses Pemilihan Kepala Desa</h5>
       <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="<?= base_url('BPDPanel/Jadwal'); ?>">
+          Lihat Jadwal Pemilihan
+        </a>
         <?php if (isset($jadwal) && strtotime($jadwal->end_time) < time()) : ?>
-        <a class="btn btn-primary" href="/BPDPanel/Laporan" target="_blank">
+        <a class="btn btn-primary" href="<?= base_url('BPDPanel/Laporan/' . $jadwal->id_schedule); ?>" target="_blank">
           Lihat Laporan Pemilihan
         </a>
         <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#aturJadwalModal">
@@ -376,6 +379,7 @@
     </div>
 
   </div>
+
 </div>
 
 <!-- Modal Atur Jadwal -->
