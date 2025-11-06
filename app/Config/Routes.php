@@ -26,6 +26,7 @@ $routes->group('BPDPanel', function (RouteCollection $routes) {
   $routes->post('Panitia/Update', 'BPDPanel::edit_user');
   $routes->get('Calon', 'BPDPanel::calon');
   $routes->get('prosesPemilihan', 'BPDPanel::prosesPemilihan');
+  $routes->get('Jadwal', 'BPDPanel::jadwal');
   $routes->get('getVotingData', 'BPDPanel::getVotingData');
   $routes->post('aturJadwal', 'BPDPanel::aturJadwal');
   $routes->get('ResetPemilhan', 'BPDPanel::reset_pemilihan');
@@ -45,6 +46,7 @@ $routes->group('PanitiaPanel', function (RouteCollection $routes) {
   $routes->post('Calon', 'PanitiaPanel::tambah_calon');
   $routes->post('Calon/Update', 'PanitiaPanel::edit_calon');
   $routes->get('prosesPemilihan', 'PanitiaPanel::prosesPemilihan');
+  $routes->get('Jadwal', 'PanitiaPanel::jadwal');
   $routes->get('getVotingData', 'PanitiaPanel::getVotingData');
   $routes->post('aturJadwal', 'PanitiaPanel::aturJadwal');
   $routes->get('ResetPemilhan', 'PanitiaPanel::reset_pemilihan');

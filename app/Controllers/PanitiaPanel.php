@@ -190,18 +190,25 @@ class PanitiaPanel extends BaseController
             ->orderBy('votes.voted_at', 'DESC')
             ->get()->getResultArray();
 
-        $schedules = $this->db->table('schedules')
-            ->orderBy('start_time', 'DESC')
-            ->get()
-            ->getResultArray();
-
         return view('panitia/proses_pemilihan', [
             'pemilihanAktif' => $pemilihanAktif,
             'chartData' => $chartData,
             'votingData' => $votingData,
             'countdownTarget' => $countdownTarget,
-            'jadwal' => $jadwal,
-            'schedules' => $schedules
+            'jadwal' => $jadwal
+        ]);
+    }
+
+    public function jadwal()
+    {
+        $schedules = $this->db->table('schedules')
+            ->orderBy('start_time', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        return view('panitia/jadwal_pemilihan', [
+            'schedules' => $schedules,
+            'currentTime' => time()
         ]);
     }
 
