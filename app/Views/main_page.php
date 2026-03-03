@@ -43,7 +43,7 @@
     <div class="space-x-6 hidden md:flex">
       <a href="#jadwal" class="hover:text-white/80 font-medium transition">Jadwal</a>
       <a href="#kandidat" class="hover:text-white/80 font-medium transition">Kandidat</a>
-      <a href="https://expo.dev/artifacts/eas/jChTXEzp8YmrqkzpVGkspt.apk" class="hover:text-white/80 font-medium transition" target="_blank">Download APK Pemilihan</a>
+      <a href="https://expo.dev/artifacts/eas/kHJ5JxLFcMcLPFEcBy2yW9.apk" class="hover:text-white/80 font-medium transition" target="_blank">Download APK Pemilihan</a>
       <a href="/BPDPanel" class="hover:text-white/80 font-medium transition">Login BPD</a>
       <a href="/PanitiaPanel" class="hover:text-white/80 font-medium transition">Login Panitia</a>
     </div>
@@ -53,7 +53,7 @@
   <div id="mobileMenu" class="md:hidden hidden px-4 pb-4 bg-emerald-600 text-white space-y-2">
     <a href="#jadwal" class="block font-medium hover:text-white/80 transition">Jadwal</a>
     <a href="#kandidat" class="block font-medium hover:text-white/80 transition">Kandidat</a>
-    <a href="https://expo.dev/artifacts/eas/jChTXEzp8YmrqkzpVGkspt.apk" class="block font-medium hover:text-white/80 transition" target="_blank">Download APK Pemilihan</a>
+    <a href="https://expo.dev/artifacts/eas/kHJ5JxLFcMcLPFEcBy2yW9.apk" class="block font-medium hover:text-white/80 transition" target="_blank">Download APK Pemilihan</a>
     <a href="/BPDPanel" class="block font-medium hover:text-white/80 transition">Login BPD</a>
     <a href="/PanitiaPanel" class="block font-medium hover:text-white/80 transition">Login Panitia</a>
   </div>
